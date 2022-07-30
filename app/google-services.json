@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "886004575187",
+    "project_id": "noun-chat",
+    "storage_bucket": "noun-chat.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:886004575187:android:b457d63f290b862b7add26",
+        "android_client_info": {
+          "package_name": "com.lotas.nounchat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "886004575187-v8um8aqf4nmhdnhfa8m7qoeg8mfci958.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQi08WFBHN16E20heyHM0IZNDXnbtKpg4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "886004575187-v8um8aqf4nmhdnhfa8m7qoeg8mfci958.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

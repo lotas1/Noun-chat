@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#DF002C</color>
+    <color name="purple_700">#6A3273</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="blue">#FF2A3570</color>
+    <color name="light_blue">#707CBC</color>
+    <color name="grey">#E1DEDE</color>
+    <color name="ash">#F6F6F6</color>
+    <color name="transparent">#00000000</color>
+    <color name="red">#C51111</color>
+    <color name="shimmer_place_holder">#DDDDDD</color>
+    <color name="splash_screen">#FF132133</color>
+
+
+
+    <!--COLOR PALETTE FIRST CHOICE -->
+    <color name="Fern_Green">#FF718355</color>
+    <color name="Moss_Green">#FF87986A</color>
+    <color name="Asparagus">#FF97A97C</color>
+    <color name="Laurel_Green">#FFB5C99A</color>
+    <color name="Tea_Green">#FFCFE1B9</color>
+    <color name="Beige">#FFE9F5DB</color>
+
+    <!--COLOR PALETTE SECOND CHOICE -->
+    <color name="Rich_Black">#FF073B3A</color>
+    <color name="light_richBlack">#5D7171</color>
+    <color name="Bottle_Green">#FF0B6E4F</color>
+    <color name="Green_Pigment">#FF08A045</color>
+    <color name="Mantis">#FF6BBF59</color>
+    <color name="Gold_Crayola">#FFDDB771</color>
+
+    <color name="lightGreen">#B9D3C1</color>
+
+    <color name="primaryColor">#10492a</color>
+    <color name="primaryLightColor">#3f7553</color>
+    <color name="primaryDarkColor">#002200</color>
+    <color name="secondaryColor">#a63d4d</color>
+    <color name="secondaryLightColor">#db6c79</color>
+    <color name="secondaryDarkColor">#720525</color>
+    <color name="primaryTextColor">#ffffff</color>
+    <color name="secondaryTextColor">#ffffff</color>
+
+</resources>
