@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 rootProject.name = "Noun Chat"
 include ':app'
 include ':theme'
+include ':chat'
