@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     android:gravity="center"
     android:orientation="vertical"
+    android:background="@color/white"
     tools:context=".ui.view.SignUpIntroActivity">
 
     <androidx.cardview.widget.CardView
@@ -52,9 +53,10 @@
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:text="Getting Started"
-        android:textAllCaps="false"
+        android:textSize="15dp"
         android:layout_marginHorizontal="20dp"
-        android:layout_marginTop="40dp" />
+        android:layout_marginTop="40dp"
+        style="@style/Widget.App.Button.ContainedButton"/>
 
     <LinearLayout
         android:layout_width="match_parent"
