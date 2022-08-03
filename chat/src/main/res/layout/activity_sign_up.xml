@@ -33,41 +33,49 @@
             android:textSize="15dp" />
 
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayout_username_signup"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             app:endIconMode="none"
-            android:layout_marginTop="25dp"
-            android:hint="@string/signUpUsername">
+            android:layout_marginTop="25dp">
             <AutoCompleteTextView
+                android:id="@+id/autoCompleteTextview_username_signUp"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"/>
+                android:layout_height="match_parent"
+                android:inputType="text"
+                android:hint="@string/signUpUsername"/>
         </com.google.android.material.textfield.TextInputLayout>
 
 
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayout_email_signup"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             app:endIconMode="none"
-            android:layout_marginTop="10dp"
-            android:hint="@string/loginEmail">
+            android:layout_marginTop="10dp">
             <AutoCompleteTextView
+                android:id="@+id/autoCompleteTextview_email_signUp"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"/>
+                android:layout_height="match_parent"
+                android:inputType="textEmailAddress"
+                android:hint="@string/loginEmail"/>
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayout_password_signup"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             app:endIconMode="password_toggle"
-            android:layout_marginTop="10dp"
-            android:hint="@string/loginPassword">
+            android:layout_marginTop="10dp">
             <AutoCompleteTextView
+                android:id="@+id/autoCompleteTextview_password_signUp"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:inputType="textPassword"/>
+                android:inputType="textPassword"
+                android:hint="@string/loginPassword"/>
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
@@ -82,7 +90,7 @@
 
 
         <Button
-            android:id="@+id/button_signUp_getStarted"
+            android:id="@+id/button_signUp"
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:text="Sign up "
@@ -102,7 +110,7 @@
             android:textSize="13dp" />
 
         <Button
-            android:id="@+id/calculate_Buttoen"
+            android:id="@+id/button_google_signUp"
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:backgroundTint="@color/secondaryColor"
