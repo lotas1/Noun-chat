@@ -9,7 +9,7 @@ import android.widget.TextView;
 import com.university.chat.R;
 
 public class SignUpActivity extends AppCompatActivity {
-    private TextView textViewForgotPassword;
+    private TextView textViewLogin;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -17,10 +17,10 @@ public class SignUpActivity extends AppCompatActivity {
         setContentView(R.layout.activity_sign_up);
 
         // instantiate views
-        textViewForgotPassword = findViewById(R.id.textView_signUp_forgot_password);
+        textViewLogin = findViewById(R.id.textView_login);
 
-        textViewForgotPassword.setOnClickListener(v -> {
-            Intent intent = new Intent(this, ForgotPasswordActivity.class);
+        textViewLogin.setOnClickListener(v -> {
+            Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
         });
     }

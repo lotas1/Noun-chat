@@ -8,7 +8,7 @@ import android.os.Bundle;
 import android.widget.TextView;
 
 public class LoginActivity extends AppCompatActivity {
-    private TextView textViewForgotPassword;
+    private TextView textViewForgotPassword, textViewSignUp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -17,9 +17,15 @@ public class LoginActivity extends AppCompatActivity {
 
         // instantiate views
         textViewForgotPassword = findViewById(R.id.textView_login_forgot_password);
+        textViewSignUp = findViewById(R.id.textView_signUp);
 
         textViewForgotPassword.setOnClickListener(v -> {
             Intent intent = new Intent(this, ForgotPasswordActivity.class);
+            startActivity(intent);
+        });
+
+        textViewSignUp.setOnClickListener(v -> {
+            Intent intent = new Intent(this, SignUpActivity.class);
             startActivity(intent);
         });
     }
