@@ -41,6 +41,35 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:886004575187:android:6c46adee8acfcf587add26",
+        "android_client_info": {
+          "package_name": "com.university.chat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "886004575187-v8um8aqf4nmhdnhfa8m7qoeg8mfci958.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQi08WFBHN16E20heyHM0IZNDXnbtKpg4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "886004575187-v8um8aqf4nmhdnhfa8m7qoeg8mfci958.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"
