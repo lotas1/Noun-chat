@@ -4,11 +4,13 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
 
 import com.university.chat.ui.view.SignUpIntroActivity;
 
 public class MainActivity extends AppCompatActivity {
-
+    private Button buttonUser, buttonAdmin;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -18,5 +20,13 @@ public class MainActivity extends AppCompatActivity {
         // open user module
         Intent intent = new Intent(this, SignUpIntroActivity.class);
         startActivity(intent);
+
+        buttonUser = findViewById(R.id.buttonUser);
+        buttonAdmin = findViewById(R.id.buttonAdmin);
+
+        buttonUser.setOnClickListener(v -> {
+            Intent intent1 = new Intent(this, SignUpIntroActivity.class);
+            startActivity(intent1);
+        });
     }
 }
