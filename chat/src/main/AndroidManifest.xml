@@ -10,20 +10,28 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.NounChat">
         <activity
+            android:name=".ui.view.UserGroupsActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"/>
+        <activity
             android:name=".ui.view.ForgotPasswordActivity"
             android:exported="false"
-            android:theme="@style/Theme.NounChat.NoActionBar"/>
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.NounChat.NoActionBar" />
         <activity
             android:name=".ui.view.SignUpActivity"
             android:exported="false"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.NounChat.NoActionBar" />
         <activity
             android:name=".ui.view.LoginActivity"
             android:exported="false"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.NounChat.NoActionBar" />
         <activity
             android:name=".ui.view.SignUpIntroActivity"
             android:exported="false"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.NounChat.NoActionBar" />
     </application>
 

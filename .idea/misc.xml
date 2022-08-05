@@ -7,9 +7,10 @@
         <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/drawable/ic_baseline_email_24.xml" value="0.2525" />
         <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/drawable/ic_baseline_visibility_24.xml" value="0.234" />
         <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/activity_forgot_password.xml" value="0.25" />
-        <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/activity_login.xml" value="0.264" />
+        <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/activity_login.xml" value="0.22" />
         <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/activity_sign_up.xml" value="0.25" />
         <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/activity_sign_up_intro.xml" value="0.264" />
+        <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/activity_user_groups.xml" value="0.26875" />
       </map>
     </option>
   </component>
