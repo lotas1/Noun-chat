@@ -201,7 +201,7 @@ public class SignUpActivity extends AppCompatActivity {
     // show snack bar
     private void showSnackBar(String label){
         Snackbar snackbar = Snackbar.make(scrollViewSignUpLayout,label,Snackbar.LENGTH_LONG);
-        snackbar.setBackgroundTint(getResources().getColor(com.university.theme.R.color.primaryColor));
+        snackbar.setBackgroundTint(getResources().getColor(com.university.theme.R.color.secondaryDarkColor));
         snackbar.show();
     }
     // method for creating account

@@ -2,4 +2,58 @@
 <resources>
     <string name="bannerAdUnitId">ca-app-pub-4340500359372785/4045575033</string>
     <string name="interstitialAdUnitId">ca-app-pub-4340500359372785/4045575033</string>
+
+    <string-array name="department">
+        <item>B.A. Christian Religious Studies</item>
+        <item>B.A. English</item>
+        <item>B.A. French</item>
+        <item>B.A. Islamic Studies</item>
+        <item>B.NSc. Nursing (New)</item>
+        <item>B.Sc. Accounting</item>
+        <item>B.Agric Animal Science</item>
+        <item>B.Agric (Aquaculture and Fisheries Management Option)</item>
+        <item>B.Agric Crop Science</item>
+        <item>B.Agric Agricultural Economics and Agro-Business</item>
+        <item>B.Sc Agricultural Extension and Management</item>
+        <item>B.Agric Agricultural Extension and Rural Development</item>
+        <item>B.Agric Soil and Land Resources Management</item>
+        <item>B.Sc. Biology</item>
+        <item>B.Sc. Business Administration</item>
+        <item>B.Sc. Information Technology</item>
+        <item>B.Sc. Chemistry</item>
+        <item>B.Sc. Computer Science</item>
+        <item>B.Sc. Cooperative and Rural Development</item>
+        <item>B.Sc. Criminology and Security Studies</item>
+        <item>B.Sc. DATA MANAGEMENT</item>
+        <item>B.Sc. Economics</item>
+        <item>B.Sc. Environmental Health Science</item>
+        <item>B.Sc. Entrepreneurship</item>
+        <item>B.Sc. Environmental Management and Toxicology</item>
+        <item>B.Sc. Hotel and Catering Management</item>
+        <item>B.Sc. International Relations</item>
+        <item>B.Sc. Marketing</item>
+        <item>B.Sc. Mass Communication</item>
+        <item>B.Sc. Mathematics</item>
+        <item>B.Sc. Maths and Computer Science</item>
+        <item>B.NSc. Nursing (Old)</item>
+        <item>B.Sc. Peace Studies and Conflict Resolution</item>
+        <item>B.Sc. Physics</item>
+        <item>B.Sc. Political Science</item>
+        <item>B.Sc. Public Health</item>
+        <item>B.Sc. Public Administration</item>
+        <item>B.Sc. Tourism Studies</item>
+        <item>B.Sc.(ED) Agricultural Science</item>
+        <item>B.Sc.(ED) Biology</item>
+        <item>B.Sc.(ED) Business Education</item>
+        <item>B.A.(ED) Early Childhood Education</item>
+        <item>B.Sc.(ED) Chemistry</item>
+        <item>B.Sc.(ED) Computer Science</item>
+        <item>B.A.(ED) English</item>
+        <item>B.A.(ED) French</item>
+        <item>B.Sc.(ED) Integrated Science</item>
+        <item>B.Sc.(ED) Mathematics</item>
+        <item>B.Sc.(ED) Physics</item>
+        <item>B.A.(ED) Primary Education</item>
+        <item>LLB Law</item>
+    </string-array>
 </resources>

@@ -4,5 +4,6 @@
     <string name="loginEmail">Email</string>
     <string name="loginPassword">Password</string>
     <string name="signUpUsername">Username</string>
+    <string name="department">Department</string>
 
 </resources>
