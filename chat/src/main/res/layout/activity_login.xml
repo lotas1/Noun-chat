@@ -37,7 +37,7 @@
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/textInputLayout_email_login"
             android:layout_width="match_parent"
-            android:layout_height="55dp"
+            android:layout_height="wrap_content"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             app:endIconMode="none"
             android:layout_marginTop="25dp"
@@ -52,7 +52,7 @@
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/textInputLayout_password_login"
             android:layout_width="match_parent"
-            android:layout_height="55dp"
+            android:layout_height="wrap_content"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             app:endIconMode="password_toggle"
             android:layout_marginTop="15dp"
