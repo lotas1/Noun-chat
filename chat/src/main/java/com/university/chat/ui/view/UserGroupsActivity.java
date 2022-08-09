@@ -3,29 +3,24 @@ package com.university.chat.ui.view;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -36,6 +31,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.university.chat.R;
+import com.university.chat.RecyclerViewItemDecoration;
 import com.university.chat.data.model.UserGroupModel;
 import com.university.chat.ui.adapter.UserGroupsRecyclerViewAdapter;
 
@@ -43,7 +39,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class UserGroupsActivity extends AppCompatActivity {
-    private Button buttonLogOut, buttonDialogProceed;
+    private Button  buttonDialogProceed;
     private GoogleSignInClient mGoogleSignInClient;
 
     private TextInputLayout textInputLayoutUsername, textInputLayoutDepartment;
@@ -77,34 +73,37 @@ public class UserGroupsActivity extends AppCompatActivity {
         user = FirebaseAuth.getInstance().getCurrentUser();
 
         // instantiate view
-        buttonLogOut = findViewById(R.id.button_log_out);
         toolbar = findViewById(R.id.toolbar_userGroup);
         recyclerViewUserGroups = findViewById(R.id.recyclerView_userGroup);
 
         // navigate back on click
         toolbar.setNavigationOnClickListener(v -> {
             finish();
-            //Intent intent = null;
-            //try {
-            //    intent = new Intent(UserGroupsActivity.this, Class.forName("com.lotas.nounchat.MainActivity")); // com.university.noungpa.ui.view.MainActivity
-            //} catch (ClassNotFoundException e) {
-            //    e.printStackTrace();
-            //}
-            //startActivity(intent);
-            //finish();
+            //finishactivity();
         });
 
-        buttonLogOut.setOnClickListener(v -> {
-            FirebaseAuth.getInstance().signOut();
-            mGoogleSignInClient.signOut();
-            finish();
+        // toolbar menu navigation
+        toolbar.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == R.id.exit) {
+                finish();
+            } else if (item.getItemId() == R.id.logOut) {
+                // log user out from email login
+                FirebaseAuth.getInstance().signOut();
+                // sign out user from google login
+                mGoogleSignInClient.signOut();
+                finish();
+            }
+            return false;
         });
+
 
         // To display the Recycler view linearly
         LinearLayoutManager layoutManager = new LinearLayoutManager(UserGroupsActivity.this,LinearLayoutManager.VERTICAL, true);
         layoutManager.setStackFromEnd(true);
         recyclerViewUserGroups.setLayoutManager(layoutManager);
 
+        // default divider line for recycler view.
+        recyclerViewUserGroups.addItemDecoration(new RecyclerViewItemDecoration(ContextCompat.getDrawable(UserGroupsActivity.this, R.drawable.divider)));
         // firebase location path
         queryUserGroup = FirebaseDatabase.getInstance().getReference("AllUsersGroups");
         // It is a class provide by the FirebaseUI to make a
@@ -128,6 +127,12 @@ public class UserGroupsActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        userGroupsRecyclerViewAdapter.startListening();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
         userGroupsRecyclerViewAdapter.startListening();
     }
 
@@ -211,14 +216,18 @@ public class UserGroupsActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        //Intent intent = null;
-        //try {
-        //    intent = new Intent(UserGroupsActivity.this, Class.forName("com.lotas.nounchat.MainActivity")); // com.university.noungpa.ui.view.MainActivity
-        //} catch (ClassNotFoundException e) {
-        //    e.printStackTrace();
-        //}
-        //startActivity(intent);
-        //finish();
+        //finishactivity();
+    }
+
+    private void finishactivity(){
+        Intent intent = null;
+        try {
+            intent = new Intent(UserGroupsActivity.this, Class.forName("com.lotas.nounchat.MainActivity")); // com.university.noungpa.ui.view.MainActivity
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        startActivity(intent);
+        finish();
     }
 
     // checks if autocomplete text view is empty.
