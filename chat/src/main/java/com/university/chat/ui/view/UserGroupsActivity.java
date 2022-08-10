@@ -34,6 +34,7 @@ import com.university.chat.R;
 import com.university.chat.RecyclerViewItemDecoration;
 import com.university.chat.data.model.UserGroupModel;
 import com.university.chat.ui.adapter.UserGroupsRecyclerViewAdapter;
+import com.university.theme.ItemClickSupport;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -51,7 +52,7 @@ public class UserGroupsActivity extends AppCompatActivity {
     private DatabaseReference myRef, myRef1;
     private FirebaseDatabase database;
     private FirebaseUser user;
-    private Query queryUserGroup;
+    private Query queryUserGroup, queryBan;
     private UserGroupsRecyclerViewAdapter userGroupsRecyclerViewAdapter;
 
     @Override
@@ -121,6 +122,30 @@ public class UserGroupsActivity extends AppCompatActivity {
 
         // check if user has a (un_banned) profile.
         checkUserHasProfile();
+
+        // on long click in recycler view
+        ItemClickSupport.addTo(recyclerViewUserGroups).setOnItemClickListener((recyclerView, position, v) -> {
+            // firebase location path
+            queryBan = FirebaseDatabase.getInstance().getReference("BanUser");
+            // listener for changes in the data location
+            queryBan.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.child(user.getUid()).exists()){
+                        // update UI (blocked user)
+                        showAlertDialog();
+                    }else {
+                        // update UI (not blocked user)
+
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
+        });
 
     }
 
@@ -228,6 +253,17 @@ public class UserGroupsActivity extends AppCompatActivity {
         }
         startActivity(intent);
         finish();
+    }
+
+    private void showAlertDialog(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(UserGroupsActivity.this);
+        builder.setTitle("Status")
+                .setMessage("You have been ban from accessing this group for violation of its rules.")
+                .setPositiveButton("ok", (dialog, which) -> {
+
+                });
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
     // checks if autocomplete text view is empty.

@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
+import com.university.allgroupusers.ui.view.GroupMemberActivity;
 import com.university.chat.ui.view.SignUpIntroActivity;
 
 public class MainActivity extends AppCompatActivity {
@@ -18,14 +19,20 @@ public class MainActivity extends AppCompatActivity {
 
         // code begins
         // open user module
-        Intent intent = new Intent(this, SignUpIntroActivity.class);
-        startActivity(intent);
+        //Intent intent = new Intent(this, SignUpIntroActivity.class);
+        //startActivity(intent);
 
         buttonUser = findViewById(R.id.buttonUser);
         buttonAdmin = findViewById(R.id.buttonAdmin);
 
         buttonUser.setOnClickListener(v -> {
             Intent intent1 = new Intent(this, SignUpIntroActivity.class);
+            startActivity(intent1);
+        });
+
+        // admin
+        buttonAdmin.setOnClickListener(v -> {
+            Intent intent1 = new Intent(this, GroupMemberActivity.class);
             startActivity(intent1);
         });
     }

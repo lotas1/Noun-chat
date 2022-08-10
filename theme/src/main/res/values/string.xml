@@ -3,6 +3,8 @@
     <string name="bannerAdUnitId">ca-app-pub-4340500359372785/4045575033</string>
     <string name="interstitialAdUnitId">ca-app-pub-4340500359372785/4045575033</string>
 
+    <item name="item_click_support" type="id" />
+
     <string-array name="department">
         <item>B.A. Christian Religious Studies</item>
         <item>B.A. English</item>
