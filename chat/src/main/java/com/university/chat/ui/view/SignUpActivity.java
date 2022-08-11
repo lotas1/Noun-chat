@@ -35,12 +35,10 @@ import com.google.firebase.auth.GoogleAuthProvider;
 import com.university.chat.R;
 
 public class SignUpActivity extends AppCompatActivity {
-    //private TextView textViewLogin;
-    private AutoCompleteTextView autoCompleteTextViewUsername, autoCompleteTextViewEmail, autoCompleteTextViewPassword, autoCompleteTextViewPassword2;
-    private TextInputLayout textInputLayoutUsername, textInputLayoutEmail, textInputLayoutPassword, textInputLayoutPassword2;
+    private AutoCompleteTextView autoCompleteTextViewEmail, autoCompleteTextViewPassword, autoCompleteTextViewPassword2;
+    private TextInputLayout textInputLayoutEmail, textInputLayoutPassword, textInputLayoutPassword2;
     private Button buttonSignUp;
     private SignInButton signInButton;
-    private ScrollView scrollViewSignUpLayout;
 
     private ProgressDialog progressDialog;
 
@@ -66,13 +64,10 @@ public class SignUpActivity extends AppCompatActivity {
 
         // instantiate views
         //textViewLogin = findViewById(R.id.textView_login);
-        scrollViewSignUpLayout = findViewById(R.id.scrollView_signUp);
-        autoCompleteTextViewUsername = findViewById(R.id.autoCompleteTextview_username_signUp);
         autoCompleteTextViewEmail = findViewById(R.id.autoCompleteTextview_email_signUp);
         autoCompleteTextViewPassword = findViewById(R.id.autoCompleteTextview_password_signUp);
         autoCompleteTextViewPassword2 = findViewById(R.id.autoCompleteTextview_password2_signUp);
 
-        textInputLayoutUsername = findViewById(R.id.textInputLayout_username_signup);
         textInputLayoutEmail = findViewById(R.id.textInputLayout_email_signup);
         textInputLayoutPassword = findViewById(R.id.textInputLayout_password_signup);
         textInputLayoutPassword2 = findViewById(R.id.textInputLayout_password2_signup);
@@ -82,7 +77,6 @@ public class SignUpActivity extends AppCompatActivity {
 
 
         // clear error message in text input layout
-        clearError(autoCompleteTextViewUsername, textInputLayoutUsername);
         clearError(autoCompleteTextViewEmail, textInputLayoutEmail);
         clearError(autoCompleteTextViewPassword, textInputLayoutPassword);
         clearError(autoCompleteTextViewPassword2, textInputLayoutPassword2);
@@ -90,14 +84,11 @@ public class SignUpActivity extends AppCompatActivity {
         // email button sign up
         buttonSignUp.setOnClickListener(v -> {
             // clear error message in text input layout
-            textInputLayoutUsername.setError(null);
             textInputLayoutEmail.setError(null);
             textInputLayoutPassword.setError(null);
             textInputLayoutPassword2.setError(null);
             // validate user input
-            if (isEmpty(autoCompleteTextViewUsername)){
-                textInputLayoutUsername.setError("Enter username");
-            }else if (isEmpty(autoCompleteTextViewEmail)){
+            if (isEmpty(autoCompleteTextViewEmail)){
                 textInputLayoutEmail.setError("Enter email");
             } else if (isEmpty(autoCompleteTextViewPassword)) {
                 textInputLayoutPassword.setError("Password must be at least 8 characters");
@@ -200,7 +191,7 @@ public class SignUpActivity extends AppCompatActivity {
     }
     // show snack bar
     private void showSnackBar(String label){
-        Snackbar snackbar = Snackbar.make(scrollViewSignUpLayout,label,Snackbar.LENGTH_LONG);
+        Snackbar snackbar = Snackbar.make(findViewById(R.id.scrollView_signUp),label,Snackbar.LENGTH_LONG);
         snackbar.setBackgroundTint(getResources().getColor(com.university.theme.R.color.secondaryDarkColor));
         snackbar.show();
     }
@@ -218,7 +209,6 @@ public class SignUpActivity extends AppCompatActivity {
                         startActivity(intent);
                         finish();
 
-                        clearTextView(autoCompleteTextViewUsername);
                         clearTextView(autoCompleteTextViewEmail);
                         clearTextView(autoCompleteTextViewPassword);
                         //updateUI(user);

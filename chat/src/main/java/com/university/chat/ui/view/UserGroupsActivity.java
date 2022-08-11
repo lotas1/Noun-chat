@@ -15,12 +15,16 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.LinearLayout;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -40,14 +44,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class UserGroupsActivity extends AppCompatActivity {
-    private Button  buttonDialogProceed;
+    private Button  buttonDialogProceed, buttonDialogCancel;
     private GoogleSignInClient mGoogleSignInClient;
 
     private TextInputLayout textInputLayoutUsername, textInputLayoutDepartment;
-    private AutoCompleteTextView autoCompleteTextViewUsername, autoCompleteTextViewDepartment;
-    private LinearLayout linearLayoutParentViewProfile;
+    private AutoCompleteTextView autoCompleteTextViewUsername, autoCompleteTextViewDepartment, autoCompleteTextViewUsernameMyProfile, autoCompleteTextViewDepartmentMyProfile;
+    private ImageView imageViewEditMyProfile;
     private Toolbar toolbar;
     private RecyclerView recyclerViewUserGroups;
+    private TextView textViewTitleProfile;
+    private String eUsername, eDepartment;
 
     private DatabaseReference myRef, myRef1;
     private FirebaseDatabase database;
@@ -85,14 +91,25 @@ public class UserGroupsActivity extends AppCompatActivity {
 
         // toolbar menu navigation
         toolbar.setOnMenuItemClickListener(item -> {
-            if (item.getItemId() == R.id.exit) {
-                finish();
+            if (item.getItemId() == R.id.profile) {
+                // show user profile
+                customDialogMyProfile();
             } else if (item.getItemId() == R.id.logOut) {
-                // log user out from email login
-                FirebaseAuth.getInstance().signOut();
-                // sign out user from google login
-                mGoogleSignInClient.signOut();
-                finish();
+                AlertDialog.Builder builder = new AlertDialog.Builder(UserGroupsActivity.this);
+                builder.setTitle("Confirm action")
+                        .setMessage("Do you want to sign out?")
+                        .setNegativeButton("CANCEL", (dialog, which) -> {
+
+                        })
+                        .setPositiveButton("SIGN OUT", (dialog, which) -> {
+                            // log user out from email login
+                            FirebaseAuth.getInstance().signOut();
+                            // sign out user from google login
+                            mGoogleSignInClient.signOut();
+                            finish();
+                        });
+                AlertDialog dialog = builder.create();
+                dialog.show();
             }
             return false;
         });
@@ -167,6 +184,19 @@ public class UserGroupsActivity extends AppCompatActivity {
         userGroupsRecyclerViewAdapter.stopListening();
     }
 
+    // delete user account from firebase
+    private void deleteUserAccount(){
+        user.delete()
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        if (task.isSuccessful()) {
+
+                        }
+                    }
+                });
+    }
+
     // method for displaying custom dialog.
     private void customDialogProfile(){
 
@@ -179,8 +209,8 @@ public class UserGroupsActivity extends AppCompatActivity {
         textInputLayoutDepartment = customLayout.findViewById(R.id.textInputLayout_department_profile);
         autoCompleteTextViewUsername = customLayout.findViewById(R.id.autoCompleteTextview_username_profile);
         autoCompleteTextViewDepartment = customLayout.findViewById(R.id.autoCompleteTextview_department_profile);
-        linearLayoutParentViewProfile = customLayout.findViewById(R.id.linearLayout_parentView_profile);
         buttonDialogProceed = customLayout.findViewById(R.id.button_proceed_profile);
+        buttonDialogCancel = customLayout.findViewById(R.id.button_cancel_profile);
 
 
         // Creating array adapter for both department, semester and level dropdown menu.
@@ -189,14 +219,23 @@ public class UserGroupsActivity extends AppCompatActivity {
         autoCompleteTextViewDepartment.setAdapter(arrayAdapterDepartment);
 
         AlertDialog dialog = builder.create();
-        //dialog.setCancelable(false);
+        dialog.setCancelable(false);
         dialog.show();
 
         // clear error for textInput layout
         clearError(autoCompleteTextViewUsername, textInputLayoutUsername);
         clearError(autoCompleteTextViewDepartment, textInputLayoutDepartment);
-
-
+        //on click on cancel button
+        buttonDialogCancel.setOnClickListener(v -> {
+            // log user out from email login
+            FirebaseAuth.getInstance().signOut();
+            // sign out user from google login
+            mGoogleSignInClient.signOut();
+            // delete user account (for in-completion of profile)
+            deleteUserAccount();
+            finish();
+        });
+        // on click in proceed button
         buttonDialogProceed.setOnClickListener(v -> {
             // clear error in textInput layout
             textInputLayoutUsername.setError(null);
@@ -238,6 +277,118 @@ public class UserGroupsActivity extends AppCompatActivity {
         });
     }
 
+    private void customDialogMyProfile(){
+        // alert dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        final View customLayout = getLayoutInflater().inflate(R.layout.user_profile, null);
+        builder.setView(customLayout);
+        AlertDialog dialog = builder.create();
+
+        // instantiate views
+        autoCompleteTextViewUsernameMyProfile = customLayout.findViewById(R.id.autoCompleteTextview_username_myProfile);
+        autoCompleteTextViewDepartmentMyProfile = customLayout.findViewById(R.id.autoCompleteTextview_department_myProfile);
+        imageViewEditMyProfile = customLayout.findViewById(R.id.imageView_edit_myProfile);
+
+        myRef.child(user.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                autoCompleteTextViewUsernameMyProfile.setText(snapshot.child("username").getValue().toString());
+                autoCompleteTextViewDepartmentMyProfile.setText(snapshot.child("department").getValue().toString());
+                eUsername = snapshot.child("username").getValue().toString();
+                eDepartment = snapshot.child("department").getValue().toString();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
+        imageViewEditMyProfile.setOnClickListener(v -> {
+            dialog.dismiss();
+            // display edit profile dialog
+            customDialogEditProfile();
+        });
+
+        dialog.show();
+
+
+    }
+
+    private void customDialogEditProfile(){
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        final View customLayout = getLayoutInflater().inflate(R.layout.create_profile_dialog, null);
+        builder.setView(customLayout);
+
+        // instantiate views
+        textInputLayoutUsername = customLayout.findViewById(R.id.textInputLayout_username_profile);
+        textInputLayoutDepartment = customLayout.findViewById(R.id.textInputLayout_department_profile);
+        autoCompleteTextViewUsername = customLayout.findViewById(R.id.autoCompleteTextview_username_profile);
+        autoCompleteTextViewDepartment = customLayout.findViewById(R.id.autoCompleteTextview_department_profile);
+        buttonDialogProceed = customLayout.findViewById(R.id.button_proceed_profile);
+        buttonDialogCancel = customLayout.findViewById(R.id.button_cancel_profile);
+        textViewTitleProfile = customLayout.findViewById(R.id.textView_title_profile);
+
+        buttonDialogProceed.setText("Update");
+        textViewTitleProfile.setText("Edit Your Profile");
+        autoCompleteTextViewUsername.setText(eUsername);
+        autoCompleteTextViewDepartment.setText(eDepartment);
+
+
+        // Creating array adapter for both department, semester and level dropdown menu.
+        ArrayAdapter<CharSequence> arrayAdapterDepartment = ArrayAdapter.createFromResource(UserGroupsActivity.this, com.university.theme.R.array.department, R.layout.list_item);
+        // set adapter
+        autoCompleteTextViewDepartment.setAdapter(arrayAdapterDepartment);
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        // clear error for textInput layout
+        clearError(autoCompleteTextViewUsername, textInputLayoutUsername);
+        clearError(autoCompleteTextViewDepartment, textInputLayoutDepartment);
+        //on click on cancel button
+        buttonDialogCancel.setOnClickListener(v -> {
+            dialog.dismiss();
+        });
+        // on click in proceed button
+        buttonDialogProceed.setOnClickListener(v -> {
+            // clear error in textInput layout
+            textInputLayoutUsername.setError(null);
+            textInputLayoutDepartment.setError(null);
+            // validate user input.
+            if (isEmpty(autoCompleteTextViewUsername)){
+                textInputLayoutUsername.setError("Enter username");
+            } else if (isEmpty(autoCompleteTextViewDepartment)) {
+                textInputLayoutDepartment.setError("Select your department");
+            }else {
+
+
+                if (user != null) {
+                    String uid, username, department;
+
+                    //get user details
+                    username = autoCompleteTextViewUsername.getText().toString();
+                    department = autoCompleteTextViewDepartment.getText().toString();
+
+                    // The user's ID, unique to the Firebase project. Do NOT use this value to
+                    // authenticate with your backend server, if you have one. Use
+                    // FirebaseUser.getIdToken() instead.
+                    // write to firebase
+                    myRef.child(user.getUid()).child("username").setValue(username);
+                    myRef.child(user.getUid()).child("department").setValue(department);
+
+
+                    // close dialog
+                    dialog.dismiss();
+
+                    // notify user
+                    showSnackBar("Profile update successful.");
+                }
+            }
+        });
+    }
+
     @Override
     public void onBackPressed() {
         super.onBackPressed();
@@ -253,6 +404,13 @@ public class UserGroupsActivity extends AppCompatActivity {
         }
         startActivity(intent);
         finish();
+    }
+
+    // show snack bar
+    private void showSnackBar(String label){
+        Snackbar snackbar = Snackbar.make(findViewById(R.id.coordinatorLayout_userGroups),label,Snackbar.LENGTH_LONG);
+        snackbar.setBackgroundTint(getResources().getColor(com.university.theme.R.color.primaryDarkColor));
+        snackbar.show();
     }
 
     private void showAlertDialog(){
