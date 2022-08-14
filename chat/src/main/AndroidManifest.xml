@@ -3,6 +3,7 @@
     package="com.university.chat">
 
     <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -11,27 +12,42 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.NounChat">
         <activity
-            android:name=".ui.view.UserGroupsActivity"
+            android:name=".ui.view.ImageFullDisplayActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.NounChat.NoActionBar"/>
         <activity
-            android:name=".ui.view.ForgotPasswordActivity"
+            android:name=".ui.view.NewGroupActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.NounChat.NoActionBar" />
         <activity
-            android:name=".ui.view.SignUpActivity"
+            android:name=".ui.view.GeneralChatActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.NounChat.NoActionBar" />
         <activity
-            android:name=".ui.view.LoginActivity"
+            android:name=".ui.view.UserGroupsActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.NounChat.NoActionBar" />
         <activity
-            android:name=".ui.view.SignUpIntroActivity"
+            android:name=".ui.view.authentication.ForgotPasswordActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.NounChat.NoActionBar" />
+        <activity
+            android:name=".ui.view.authentication.SignUpActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.NounChat.NoActionBar" />
+        <activity
+            android:name=".ui.view.authentication.LoginActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.NounChat.NoActionBar" />
+        <activity
+            android:name=".ui.view.authentication.SignUpIntroActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.NounChat.NoActionBar" />

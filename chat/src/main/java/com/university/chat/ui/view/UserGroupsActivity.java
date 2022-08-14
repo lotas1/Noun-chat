@@ -42,6 +42,7 @@ import com.university.theme.ItemClickSupport;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class UserGroupsActivity extends AppCompatActivity {
     private Button  buttonDialogProceed, buttonDialogCancel;
@@ -60,6 +61,7 @@ public class UserGroupsActivity extends AppCompatActivity {
     private FirebaseUser user;
     private Query queryUserGroup, queryBan;
     private UserGroupsRecyclerViewAdapter userGroupsRecyclerViewAdapter;
+    private boolean admin = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,9 +91,38 @@ public class UserGroupsActivity extends AppCompatActivity {
             //finishactivity();
         });
 
+        // update app bar subtitle with user username
+        myRef.child(user.getUid()).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()){
+                    String username = Objects.requireNonNull(snapshot.child("username").getValue()).toString();
+                    toolbar.setSubtitle("@" + username);
+                }
+                if (snapshot.child("admin").exists()){
+                    admin = (boolean) Objects.requireNonNull(snapshot.child("admin").getValue());
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
         // toolbar menu navigation
         toolbar.setOnMenuItemClickListener(item -> {
-            if (item.getItemId() == R.id.profile) {
+            if (item.getItemId() == R.id.new_group){
+                // check if user is admin
+                if (admin){
+                    // navigate to view for creating group.
+                    Intent intent = new Intent(UserGroupsActivity.this, NewGroupActivity.class);
+                    startActivity(intent);
+                }else {
+                    // notify user not admin
+                    showAlertDialog("Admin Feature", "Only admin can access this features.");
+                }
+            }else if (item.getItemId() == R.id.profile) {
                 // show user profile
                 customDialogMyProfile();
             } else if (item.getItemId() == R.id.logOut) {
@@ -123,7 +154,7 @@ public class UserGroupsActivity extends AppCompatActivity {
         // default divider line for recycler view.
         recyclerViewUserGroups.addItemDecoration(new RecyclerViewItemDecoration(ContextCompat.getDrawable(UserGroupsActivity.this, R.drawable.divider)));
         // firebase location path
-        queryUserGroup = FirebaseDatabase.getInstance().getReference("AllUsersGroups");
+        queryUserGroup = FirebaseDatabase.getInstance().getReference("Groups");
         // It is a class provide by the FirebaseUI to make a
         // query in the database to fetch appropriate data
         FirebaseRecyclerOptions<UserGroupModel> options = new FirebaseRecyclerOptions.Builder<UserGroupModel>()
@@ -150,10 +181,11 @@ public class UserGroupsActivity extends AppCompatActivity {
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     if (snapshot.child(user.getUid()).exists()){
                         // update UI (blocked user)
-                        showAlertDialog();
+                        showAlertDialog("Status", "You have been ban from accessing this group for violation of its rules.");
                     }else {
                         // update UI (not blocked user)
-
+                        Intent intent = new Intent(UserGroupsActivity.this, GeneralChatActivity.class);
+                        startActivity(intent);
                     }
                 }
 
@@ -167,37 +199,22 @@ public class UserGroupsActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        userGroupsRecyclerViewAdapter.startListening();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        userGroupsRecyclerViewAdapter.startListening();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onDestroy() {
+        super.onDestroy();
         userGroupsRecyclerViewAdapter.stopListening();
     }
 
     // delete user account from firebase
     private void deleteUserAccount(){
         user.delete()
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
 
-                        }
                     }
                 });
     }
 
-    // method for displaying custom dialog.
+    // custom dialog for user to create profile.
     private void customDialogProfile(){
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -276,7 +293,7 @@ public class UserGroupsActivity extends AppCompatActivity {
             }
         });
     }
-
+    // custom dialog for user view profile
     private void customDialogMyProfile(){
         // alert dialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -292,10 +309,12 @@ public class UserGroupsActivity extends AppCompatActivity {
         myRef.child(user.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                autoCompleteTextViewUsernameMyProfile.setText(snapshot.child("username").getValue().toString());
-                autoCompleteTextViewDepartmentMyProfile.setText(snapshot.child("department").getValue().toString());
-                eUsername = snapshot.child("username").getValue().toString();
-                eDepartment = snapshot.child("department").getValue().toString();
+                if (snapshot.exists()){
+                    autoCompleteTextViewUsernameMyProfile.setText(snapshot.child("username").getValue().toString());
+                    autoCompleteTextViewDepartmentMyProfile.setText(snapshot.child("department").getValue().toString());
+                    eUsername = snapshot.child("username").getValue().toString();
+                    eDepartment = snapshot.child("department").getValue().toString();
+                }
             }
 
             @Override
@@ -314,13 +333,12 @@ public class UserGroupsActivity extends AppCompatActivity {
 
 
     }
-
+    // custom dialog for user to edit profile
     private void customDialogEditProfile(){
-
+        // dialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         final View customLayout = getLayoutInflater().inflate(R.layout.create_profile_dialog, null);
         builder.setView(customLayout);
-
         // instantiate views
         textInputLayoutUsername = customLayout.findViewById(R.id.textInputLayout_username_profile);
         textInputLayoutDepartment = customLayout.findViewById(R.id.textInputLayout_department_profile);
@@ -329,12 +347,10 @@ public class UserGroupsActivity extends AppCompatActivity {
         buttonDialogProceed = customLayout.findViewById(R.id.button_proceed_profile);
         buttonDialogCancel = customLayout.findViewById(R.id.button_cancel_profile);
         textViewTitleProfile = customLayout.findViewById(R.id.textView_title_profile);
-
         buttonDialogProceed.setText("Update");
         textViewTitleProfile.setText("Edit Your Profile");
         autoCompleteTextViewUsername.setText(eUsername);
         autoCompleteTextViewDepartment.setText(eDepartment);
-
 
         // Creating array adapter for both department, semester and level dropdown menu.
         ArrayAdapter<CharSequence> arrayAdapterDepartment = ArrayAdapter.createFromResource(UserGroupsActivity.this, com.university.theme.R.array.department, R.layout.list_item);
@@ -362,15 +378,11 @@ public class UserGroupsActivity extends AppCompatActivity {
             } else if (isEmpty(autoCompleteTextViewDepartment)) {
                 textInputLayoutDepartment.setError("Select your department");
             }else {
-
-
                 if (user != null) {
-                    String uid, username, department;
-
+                    String username, department;
                     //get user details
                     username = autoCompleteTextViewUsername.getText().toString();
                     department = autoCompleteTextViewDepartment.getText().toString();
-
                     // The user's ID, unique to the Firebase project. Do NOT use this value to
                     // authenticate with your backend server, if you have one. Use
                     // FirebaseUser.getIdToken() instead.
@@ -378,10 +390,8 @@ public class UserGroupsActivity extends AppCompatActivity {
                     myRef.child(user.getUid()).child("username").setValue(username);
                     myRef.child(user.getUid()).child("department").setValue(department);
 
-
                     // close dialog
                     dialog.dismiss();
-
                     // notify user
                     showSnackBar("Profile update successful.");
                 }
@@ -405,25 +415,22 @@ public class UserGroupsActivity extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
-
     // show snack bar
     private void showSnackBar(String label){
         Snackbar snackbar = Snackbar.make(findViewById(R.id.coordinatorLayout_userGroups),label,Snackbar.LENGTH_LONG);
         snackbar.setBackgroundTint(getResources().getColor(com.university.theme.R.color.primaryDarkColor));
         snackbar.show();
     }
-
-    private void showAlertDialog(){
+    private void showAlertDialog(String title, String message){
         AlertDialog.Builder builder = new AlertDialog.Builder(UserGroupsActivity.this);
-        builder.setTitle("Status")
-                .setMessage("You have been ban from accessing this group for violation of its rules.")
+        builder.setTitle(title)
+                .setMessage(message)
                 .setPositiveButton("ok", (dialog, which) -> {
 
                 });
         AlertDialog dialog = builder.create();
         dialog.show();
     }
-
     // checks if autocomplete text view is empty.
     private boolean isEmpty(AutoCompleteTextView autoCompleteTextView) {
         return TextUtils.isEmpty(autoCompleteTextView.getEditableText());

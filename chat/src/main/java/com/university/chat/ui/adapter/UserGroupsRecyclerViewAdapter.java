@@ -1,6 +1,10 @@
 package com.university.chat.ui.adapter;
 
+import android.app.Activity;
+import android.app.ActivityOptions;
 import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.university.chat.data.model.UserGroupModel;
+import com.university.chat.ui.view.ImageFullDisplayActivity;
 
 public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserGroupModel, UserGroupsRecyclerViewAdapter.UserGroupsViewHolder> {
 
@@ -35,10 +40,10 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
     @Override
     protected void onBindViewHolder(@NonNull UserGroupsViewHolder holder, int position, @NonNull UserGroupModel model) {
         // update profile pics UI
-        if (model.getImage() == null){
+        if (model.getGroupImage() == null){
             holder.imageViewGroupProfilePics.setImageResource(R.drawable.noun_icon);
         }else {
-            Glide.with(context).load(model.getImage()).into(holder.imageViewGroupProfilePics);
+            Glide.with(context).load(model.getGroupImage()).into(holder.imageViewGroupProfilePics);
         }
 
         if (model.getGroupName() == null){
@@ -59,6 +64,24 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
             holder.textViewLastMessage.setText(model.getLastMessage());
         }
 
+
+        holder.imageViewGroupProfilePics.setOnClickListener(v -> {
+            Intent intent = new Intent(context, ImageFullDisplayActivity.class);
+            Bundle bundle = new Bundle();
+            bundle.putString("transitionName", "groupPic" + holder.getAbsoluteAdapterPosition());
+            intent.putExtras(bundle);
+            intent.putExtra("groupName", model.getGroupName());
+            intent.putExtra("groupImage", model.getGroupImage());
+            // create the transition animation - the images in the layouts
+            // of both activities are defined
+
+            ActivityOptions options = ActivityOptions
+                    .makeSceneTransitionAnimation((Activity) context, holder.imageViewGroupProfilePics, "groupPic" + holder.getAbsoluteAdapterPosition());
+            // start the activity
+            context.startActivity(intent, options.toBundle());
+        });
+
+        holder.imageViewGroupProfilePics.setTransitionName("groupPic" + position);
     }
 
     @NonNull

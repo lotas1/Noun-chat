@@ -1,25 +1,7 @@
-package com.university.chat.ui.view;
+package com.university.chat.ui.view.authentication;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.common.SignInButton;
-import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.android.material.snackbar.Snackbar;
-import com.google.android.material.textfield.TextInputLayout;
-import com.google.firebase.auth.AuthCredential;
-import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.GoogleAuthProvider;
-import com.university.chat.R;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -27,21 +9,34 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.ScrollView;
-import android.widget.TextView;
 import android.widget.Toast;
 
-public class LoginActivity extends AppCompatActivity {
-    private TextView textViewForgotPassword, textViewSignUp;
-    private AutoCompleteTextView autoCompleteTextViewEmail, autoCompleteTextViewPassword;
-    private TextInputLayout textInputLayoutEmail, textInputLayoutPassword;
-    private Button buttonLogin;
-    private String email, password;
-    private ProgressDialog progressDialog;
-    private SignInButton googleLogInButton;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
+import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GoogleAuthProvider;
+import com.university.chat.R;
+import com.university.chat.ui.view.UserGroupsActivity;
 
-    private ScrollView scrollViewLoginLayout;
+public class SignUpActivity extends AppCompatActivity {
+    private AutoCompleteTextView autoCompleteTextViewEmail, autoCompleteTextViewPassword, autoCompleteTextViewPassword2;
+    private TextInputLayout textInputLayoutEmail, textInputLayoutPassword, textInputLayoutPassword2;
+    private Button buttonSignUp;
+    private SignInButton signInButton;
+
+    private ProgressDialog progressDialog;
+
     private FirebaseAuth mAuth;
+    private String username, email, password;
 
     private GoogleSignInClient mGoogleSignInClient;
     public static final int RC_SIGN_IN = 9001;
@@ -49,8 +44,7 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
-
+        setContentView(R.layout.activity_sign_up);
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
 
@@ -62,28 +56,30 @@ public class LoginActivity extends AppCompatActivity {
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
         // instantiate views
-        textViewForgotPassword = findViewById(R.id.textView_login_forgot_password);
-        textViewSignUp = findViewById(R.id.textView_signUp);
-        scrollViewLoginLayout = findViewById(R.id.scrollView_login);
+        //textViewLogin = findViewById(R.id.textView_login);
+        autoCompleteTextViewEmail = findViewById(R.id.autoCompleteTextview_email_signUp);
+        autoCompleteTextViewPassword = findViewById(R.id.autoCompleteTextview_password_signUp);
+        autoCompleteTextViewPassword2 = findViewById(R.id.autoCompleteTextview_password2_signUp);
 
-        autoCompleteTextViewEmail = findViewById(R.id.autoCompleteTextview_email_login);
-        autoCompleteTextViewPassword = findViewById(R.id.autoCompleteTextview_password_login);
+        textInputLayoutEmail = findViewById(R.id.textInputLayout_email_signup);
+        textInputLayoutPassword = findViewById(R.id.textInputLayout_password_signup);
+        textInputLayoutPassword2 = findViewById(R.id.textInputLayout_password2_signup);
 
-        textInputLayoutEmail = findViewById(R.id.textInputLayout_email_login);
-        textInputLayoutPassword = findViewById(R.id.textInputLayout_password_login);
+        buttonSignUp = findViewById(R.id.button_signUp);
+        signInButton = findViewById(R.id.sign_in_button);
 
-        buttonLogin = findViewById(R.id.button_login);
-        googleLogInButton = findViewById(R.id.googleLog_in_button);
 
         // clear error message in text input layout
         clearError(autoCompleteTextViewEmail, textInputLayoutEmail);
         clearError(autoCompleteTextViewPassword, textInputLayoutPassword);
+        clearError(autoCompleteTextViewPassword2, textInputLayoutPassword2);
 
-        // Email login button
-        buttonLogin.setOnClickListener(v -> {
+        // email button sign up
+        buttonSignUp.setOnClickListener(v -> {
             // clear error message in text input layout
             textInputLayoutEmail.setError(null);
             textInputLayoutPassword.setError(null);
+            textInputLayoutPassword2.setError(null);
             // validate user input
             if (isEmpty(autoCompleteTextViewEmail)){
                 textInputLayoutEmail.setError("Enter email");
@@ -95,44 +91,42 @@ public class LoginActivity extends AppCompatActivity {
                     textInputLayoutEmail.setError("Enter valid email");
                 }else if (autoCompleteTextViewPassword.getText().toString().length() < 8){
                     textInputLayoutPassword.setError("Password must be at least 8 characters");
+                } else if (!autoCompleteTextViewPassword.getText().toString().equals(autoCompleteTextViewPassword2.getText().toString())) {
+                    textInputLayoutPassword2.setError("Password does not match");
                 }else {
                     // assign value to email and password variable
                     email = autoCompleteTextViewEmail.getText().toString().trim();
                     password = autoCompleteTextViewPassword.getText().toString().trim();
 
-                    progressDialog = new ProgressDialog(this);
+                    progressDialog = new ProgressDialog(SignUpActivity.this);
                     progressDialog.setMessage("Signing In.......");
                     progressDialog.setCancelable(false);
                     progressDialog.show();
 
                     // signing up new users
-                    SignIn(email, password);
+                    createAccount(email, password);
                 }
             }
         });
 
-        googleLogInButton.setOnClickListener(v -> {
+        // google button sign up
+        signInButton.setOnClickListener(v -> {
             signIn();
         });
 
-        // onClick opens forgot password activity
-        textViewForgotPassword.setOnClickListener(v -> {
-            Intent intent = new Intent(this, ForgotPasswordActivity.class);
-            startActivity(intent);
-        });
 
-        // onClick opens forgot sign up activity
-        textViewSignUp.setOnClickListener(v -> {
-            Intent intent = new Intent(this, SignUpActivity.class);
+
+        /**textViewLogin.setOnClickListener(v -> {
+            Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
-        });
+        });**/
     }
-
     // SignIn method which we can call with the click of the SignIn button
     private void signIn() {
         Intent signInIntent = mGoogleSignInClient.getSignInIntent();
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -146,15 +140,16 @@ public class LoginActivity extends AppCompatActivity {
             }
         }
     }
+
     //Authenticate GoogleSignInAccount with firebase to get Firebase user
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
         mAuth.signInWithCredential(credential)
                 .addOnSuccessListener(this, authResult -> {
-                    startActivity(new Intent(LoginActivity.this, UserGroupsActivity.class));
+                    startActivity(new Intent(SignUpActivity.this, UserGroupsActivity.class));
                     finish();
                 })
-                .addOnFailureListener(this, e -> Toast.makeText(LoginActivity.this, "Authentication failed.",
+                .addOnFailureListener(this, e -> Toast.makeText(SignUpActivity.this, "Authentication failed.",
                         Toast.LENGTH_SHORT).show());
     }
 
@@ -164,37 +159,11 @@ public class LoginActivity extends AppCompatActivity {
         // Check if user is signed in (non-null) and update UI accordingly.
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if(currentUser != null){
-           // reload();
-            Intent intent = new Intent(LoginActivity.this, UserGroupsActivity.class);
+            //reload();
+            Intent intent = new Intent(SignUpActivity.this, UserGroupsActivity.class);
             startActivity(intent);
             finish();
         }
-    }
-
-    private void SignIn(String email, String password){
-        mAuth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, task -> {
-                    if (task.isSuccessful()) {
-                        // Sign in success, update UI with the signed-in user's information
-                        FirebaseUser user = mAuth.getCurrentUser();
-
-                        progressDialog.dismiss();
-
-                        Intent intent = new Intent(LoginActivity.this, UserGroupsActivity.class);
-                        startActivity(intent);
-                        finish();
-
-                        clearTextView(autoCompleteTextViewEmail);
-                        clearTextView(autoCompleteTextViewPassword);
-
-                        //updateUI(user);
-                    } else {
-                        // If sign in fails, display a message to the user.
-                        progressDialog.dismiss();
-                        showSnackBar("There is a problem login in. Check your email and password or create account.");
-                        //updateUI(null);
-                    }
-                });
     }
 
     // checks if autocomplete text view is empty.
@@ -215,7 +184,33 @@ public class LoginActivity extends AppCompatActivity {
     }
     // show snack bar
     private void showSnackBar(String label){
-        Snackbar snackbar = Snackbar.make(scrollViewLoginLayout,label,Snackbar.LENGTH_LONG);
+        Snackbar snackbar = Snackbar.make(findViewById(R.id.scrollView_signUp),label,Snackbar.LENGTH_LONG);
+        snackbar.setBackgroundTint(getResources().getColor(com.university.theme.R.color.secondaryDarkColor));
         snackbar.show();
+    }
+    // method for creating account
+    private void createAccount(String email, String password){
+        mAuth.createUserWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        // Sign in success, update UI with the signed-in user's information
+                        FirebaseUser user = mAuth.getCurrentUser();
+
+                        progressDialog.dismiss();
+
+                        Intent intent = new Intent(SignUpActivity.this, UserGroupsActivity.class);
+                        startActivity(intent);
+                        finish();
+
+                        clearTextView(autoCompleteTextViewEmail);
+                        clearTextView(autoCompleteTextViewPassword);
+                        //updateUI(user);
+                    } else {
+                        // If sign in fails, display a message to the user.
+                        progressDialog.dismiss();
+                        showSnackBar("There is a problem creating your account. Check your email is spelled correctly or previously used to create an account already");
+                        //updateUI(null);
+                    }
+                });
     }
 }

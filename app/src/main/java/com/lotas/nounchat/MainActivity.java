@@ -4,11 +4,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 
 import com.university.allgroupusers.ui.view.GroupMemberActivity;
-import com.university.chat.ui.view.SignUpIntroActivity;
+import com.university.chat.ui.view.authentication.SignUpIntroActivity;
 
 public class MainActivity extends AppCompatActivity {
     private Button buttonUser, buttonAdmin;

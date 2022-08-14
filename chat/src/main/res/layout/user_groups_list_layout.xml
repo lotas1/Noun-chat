@@ -11,7 +11,7 @@
         android:id="@+id/cardView2"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        app:cardBackgroundColor="@color/secondaryColor"
+        app:cardBackgroundColor="@color/white"
         app:cardCornerRadius="100dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"

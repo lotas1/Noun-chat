@@ -1,8 +1,8 @@
-package com.university.chat.data.model;
+package com.university.allgroupusers.data.model;
 
 public class UserGroupModel {
 
-    String groupName, time, lastMessage, sender, groupImage;
+    String groupName, time, lastMessage, sender, image;
 
     public String getGroupName() {
         return groupName;
@@ -36,11 +36,11 @@ public class UserGroupModel {
         this.sender = sender;
     }
 
-    public String getGroupImage() {
-        return groupImage;
+    public String getImage() {
+        return image;
     }
 
-    public void setGroupImage(String groupImage) {
-        this.groupImage = groupImage;
+    public void setImage(String image) {
+        this.image = image;
     }
 }

@@ -5,7 +5,7 @@
     android:id="@+id/scrollView_signUp"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.view.LoginActivity">
+    tools:context=".ui.view.authentication.LoginActivity">
 
     <LinearLayout
         android:layout_width="match_parent"

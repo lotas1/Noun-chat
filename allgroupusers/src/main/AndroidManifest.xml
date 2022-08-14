@@ -13,7 +13,7 @@
             android:name=".ui.view.GroupMemberActivity"
             android:exported="false"
             android:screenOrientation="portrait"
-            android:theme="@style/Theme.NounChat.NoActionBar"/>
+            android:theme="@style/Theme.NounChat.NoActionBar" />
     </application>
 
 </manifest>

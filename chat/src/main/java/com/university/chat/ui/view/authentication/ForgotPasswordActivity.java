@@ -1,4 +1,4 @@
-package com.university.chat.ui.view;
+package com.university.chat.ui.view.authentication;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
