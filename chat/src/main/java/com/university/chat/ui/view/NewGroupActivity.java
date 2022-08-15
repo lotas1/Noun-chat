@@ -3,6 +3,7 @@ package com.university.chat.ui.view;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.widget.Toolbar;
 
 import android.app.AlertDialog;
@@ -22,6 +23,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -38,10 +40,12 @@ import java.util.Objects;
 public class NewGroupActivity extends AppCompatActivity {
     private Toolbar toolbar;
     private ImageView imageViewGroupPics;
+    private SwitchCompat switchCompat;
     private static final int PICK_IMAGE = 100;
     private FirebaseDatabase database;
-    private DatabaseReference databaseGroupReference, mRef;
+    private DatabaseReference databaseGroupReference;
     private FirebaseStorage storage;
+    private Query queryUserUsername;
     private StorageReference storageRef, groupImageRef;
     private Uri selectedImageUri;
     private UploadTask uploadTask;
@@ -74,6 +78,7 @@ public class NewGroupActivity extends AppCompatActivity {
         imageViewGroupPics = findViewById(R.id.imageView_new_group);
         fab = findViewById(R.id.floating_action_button_newGroup);
         editTextGroupName = findViewById(R.id.editText_new_group);
+        switchCompat = findViewById(R.id.switch_new_group);
 
         // close view on click.
         toolbar.setNavigationOnClickListener(v -> finish());
@@ -134,8 +139,9 @@ public class NewGroupActivity extends AppCompatActivity {
     }
 
     private void groupCreatorUsername(){
-        mRef = database.getReference("Users");
-        mRef.child(user.getUid()).addValueEventListener(new ValueEventListener() {
+        // firebase location path
+        queryUserUsername = FirebaseDatabase.getInstance().getReference("Users").child(user.getUid());
+        queryUserUsername.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()){
@@ -165,6 +171,12 @@ public class NewGroupActivity extends AppCompatActivity {
         map.put("key", key);
         map.put("time", getDate());
         map.put("lastMessage", "welcome to " + groupName + " group");
+        // checks if groups chat will be used by admin only or not.
+        if (switchCompat.isChecked()){
+            map.put("adminOnly", true);
+        }else {
+            map.put("adminOnly", false);
+        }
         assert key != null;
         // write data to firebase
         databaseGroupReference.child(key).setValue(map);
@@ -218,6 +230,12 @@ public class NewGroupActivity extends AppCompatActivity {
                     map.put("key", key);
                     map.put("time", getDate());
                     map.put("lastMessage", "welcome to " + groupName + " group");
+                    // checks if groups chat will be used by admin only or not.
+                    if (switchCompat.isChecked()){
+                        map.put("adminOnly", true);
+                    }else {
+                        map.put("adminOnly", false);
+                    }
                     assert key != null;
                     // write data to firebase
                     databaseGroupReference.child(key).setValue(map);

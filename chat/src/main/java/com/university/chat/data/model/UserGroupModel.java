@@ -2,7 +2,8 @@ package com.university.chat.data.model;
 
 public class UserGroupModel {
 
-    String groupName, time, lastMessage, sender, groupImage;
+    String groupName, time, lastMessage, sender, groupImage, key;
+    boolean adminOnly;
 
     public String getGroupName() {
         return groupName;
@@ -42,5 +43,21 @@ public class UserGroupModel {
 
     public void setGroupImage(String groupImage) {
         this.groupImage = groupImage;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public boolean isAdminOnly() {
+        return adminOnly;
+    }
+
+    public void setAdminOnly(boolean adminOnly) {
+        this.adminOnly = adminOnly;
     }
 }

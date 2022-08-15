@@ -2,6 +2,7 @@ package com.university.chat.ui.adapter;
 
 import android.app.Activity;
 import android.app.ActivityOptions;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -13,6 +14,13 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 import com.university.chat.R;
 
 import androidx.annotation.NonNull;
@@ -20,11 +28,15 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.university.chat.data.model.UserGroupModel;
+import com.university.chat.ui.view.GeneralChatActivity;
 import com.university.chat.ui.view.ImageFullDisplayActivity;
 
 public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserGroupModel, UserGroupsRecyclerViewAdapter.UserGroupsViewHolder> {
 
     private Context context;
+    private FirebaseUser user;
+    private Query queryBan;
+    private boolean isUserBan;
 
     /**
      * Initialize a {@link RecyclerView.Adapter} that listens to a Firebase query. See
@@ -35,6 +47,8 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
     public UserGroupsRecyclerViewAdapter(@NonNull FirebaseRecyclerOptions<UserGroupModel> options, Context context) {
         super(options);
         this.context = context;
+        // update ui
+        checkIfUserIsBan();
     }
 
     @Override
@@ -69,8 +83,7 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
                 holder.textViewLastMessage.setText(sender.concat(": ").concat(lastMessage));
             }
         }
-
-
+        // on click on group profile pics.
         holder.imageViewGroupProfilePics.setOnClickListener(v -> {
             Intent intent = new Intent(context, ImageFullDisplayActivity.class);
             Bundle bundle = new Bundle();
@@ -86,9 +99,34 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
             // start the activity
             context.startActivity(intent, options.toBundle());
         });
+        //on click on itemView
+        holder.itemView.setOnClickListener(v -> {
+
+            if (isUserBan){
+                // update UI (blocked user)
+                showAlertDialog(context,"Status", "You have been ban from accessing this group for violation of its rules.");
+            }else {
+                Intent intent = new Intent(context, GeneralChatActivity.class);
+                //Bundle bundle = new Bundle();
+                //bundle.putString("transitionName", "groupPic" + holder.getAbsoluteAdapterPosition());
+                //intent.putExtras(bundle);
+                intent.putExtra("groupName", model.getGroupName());
+                intent.putExtra("groupImage", model.getGroupImage());
+                intent.putExtra("key", model.getKey());
+                intent.putExtra("adminOnly", model.isAdminOnly());
+                // create the transition animation - the images in the layouts
+                // of both activities are defined
+
+                //ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation((Activity) context, holder.imageViewGroupProfilePics, "groupPic" + holder.getAbsoluteAdapterPosition());
+                // start the activity
+                //context.startActivity(intent, options.toBundle());
+                context.startActivity(intent);
+            }
+        });
 
         holder.imageViewGroupProfilePics.setTransitionName("groupPic" + position);
     }
+
 
     @NonNull
     @Override
@@ -109,5 +147,41 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
             textViewLastMessageTime = itemView.findViewById(R.id.textView_group_last_message_time);
             imageViewGroupProfilePics = itemView.findViewById(R.id.imageView_group_profile_pics);
         }
+    }
+
+    private void showAlertDialog(Context context, String title, String message){
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("ok", (dialog, which) -> {
+
+                });
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+    // method for checking is user is banned or not
+    private void checkIfUserIsBan(){
+        // get current user details
+        user = FirebaseAuth.getInstance().getCurrentUser();
+        // firebase location path
+        queryBan = FirebaseDatabase.getInstance().getReference("BanUser");
+        // listener for changes in the data location
+        queryBan.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.child(user.getUid()).exists()){
+                    // update UI (blocked user)
+                    isUserBan = true;
+                }else {
+                    // update UI (not blocked user)
+                    isUserBan = false;
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
     }
 }

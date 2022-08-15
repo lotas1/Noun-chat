@@ -57,10 +57,10 @@ public class UserGroupsActivity extends AppCompatActivity {
     private TextView textViewTitleProfile;
     private String eUsername, eDepartment;
 
-    private DatabaseReference myRef, myRef1;
+    private DatabaseReference myRef;
     private FirebaseDatabase database;
     private FirebaseUser user;
-    private Query queryUserGroup, queryBan;
+    private Query queryUserGroup, queryUserProfile;
     private UserGroupsRecyclerViewAdapter userGroupsRecyclerViewAdapter;
     private boolean admin = false;
 
@@ -92,24 +92,8 @@ public class UserGroupsActivity extends AppCompatActivity {
             //finishactivity();
         });
 
-        // update app bar subtitle with user username
-        myRef.child(user.getUid()).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()){
-                    String username = Objects.requireNonNull(snapshot.child("username").getValue()).toString();
-                    toolbar.setSubtitle("@" + username);
-                }
-                if (snapshot.child("admin").exists()){
-                    admin = (boolean) Objects.requireNonNull(snapshot.child("admin").getValue());
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
+        // updates ui with user profile
+        checkUserHasProfile();
 
         // toolbar menu navigation
         toolbar.setOnMenuItemClickListener(item -> {
@@ -168,34 +152,6 @@ public class UserGroupsActivity extends AppCompatActivity {
         // Function to tell the app to start getting data from database
         recyclerViewUserGroups.setAdapter(userGroupsRecyclerViewAdapter);
         userGroupsRecyclerViewAdapter.startListening();
-
-        // check if user has a (un_banned) profile.
-        checkUserHasProfile();
-
-        // on long click in recycler view
-        ItemClickSupport.addTo(recyclerViewUserGroups).setOnItemClickListener((recyclerView, position, v) -> {
-            // firebase location path
-            queryBan = FirebaseDatabase.getInstance().getReference("BanUser");
-            // listener for changes in the data location
-            queryBan.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    if (snapshot.child(user.getUid()).exists()){
-                        // update UI (blocked user)
-                        showAlertDialog(UserGroupsActivity.this,"Status", "You have been ban from accessing this group for violation of its rules.");
-                    }else {
-                        // update UI (not blocked user)
-                        Intent intent = new Intent(UserGroupsActivity.this, GeneralChatActivity.class);
-                        startActivity(intent);
-                    }
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-
-                }
-            });
-        });
 
     }
 
@@ -441,19 +397,30 @@ public class UserGroupsActivity extends AppCompatActivity {
     private void clearError(AutoCompleteTextView autoCompleteTextView, TextInputLayout textInputLayout){
         autoCompleteTextView.setOnClickListener(v -> textInputLayout.setError(null));
     }
-    // check if user has a (un_banned) profile.
+    // check if user has a profile and read profile.
     private void checkUserHasProfile(){
-        myRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        // firebase location path
+        queryUserProfile = FirebaseDatabase.getInstance().getReference("Users").child(user.getUid());
+        queryUserProfile.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.child(user.getUid()).exists()){
-                    // user exist
-                    //Toast.makeText(UserGroupsActivity.this, "user exist", Toast.LENGTH_SHORT).show();
-                }else{
+                // checks if user has a profile.
+                if (!snapshot.exists()){
                     // user doesn't exist, create profile.
                     // show profile custom dialog
                     customDialogProfile();
                 }
+                // retrieve current user username and update ui
+                if (snapshot.exists()){
+                    String username = Objects.requireNonNull(snapshot.child("username").getValue()).toString();
+                    toolbar.setSubtitle("@" + username);
+                }
+                // checks if user is an admin and update ui
+                if (snapshot.child("admin").exists()){
+                    admin = (boolean) Objects.requireNonNull(snapshot.child("admin").getValue());
+                }
+
+
             }
 
             @Override
