@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -120,7 +121,7 @@ public class UserGroupsActivity extends AppCompatActivity {
                     startActivity(intent);
                 }else {
                     // notify user not admin
-                    showAlertDialog("Admin Feature", "Only admin can access this features.");
+                    showAlertDialog(UserGroupsActivity.this, "Admin Feature", "Only admin can access this features.");
                 }
             }else if (item.getItemId() == R.id.profile) {
                 // show user profile
@@ -147,7 +148,7 @@ public class UserGroupsActivity extends AppCompatActivity {
 
 
         // To display the Recycler view linearly
-        LinearLayoutManager layoutManager = new LinearLayoutManager(UserGroupsActivity.this,LinearLayoutManager.VERTICAL, true);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(UserGroupsActivity.this,LinearLayoutManager.VERTICAL, false);
         layoutManager.setStackFromEnd(true);
         recyclerViewUserGroups.setLayoutManager(layoutManager);
 
@@ -181,7 +182,7 @@ public class UserGroupsActivity extends AppCompatActivity {
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     if (snapshot.child(user.getUid()).exists()){
                         // update UI (blocked user)
-                        showAlertDialog("Status", "You have been ban from accessing this group for violation of its rules.");
+                        showAlertDialog(UserGroupsActivity.this,"Status", "You have been ban from accessing this group for violation of its rules.");
                     }else {
                         // update UI (not blocked user)
                         Intent intent = new Intent(UserGroupsActivity.this, GeneralChatActivity.class);
@@ -282,6 +283,7 @@ public class UserGroupsActivity extends AppCompatActivity {
                     map.put("department", department);
                     map.put("group", department);
                     map.put("ban", false);
+                    map.put("admin", false);
 
                     // write to firebase
                     myRef.child(uid).setValue(map);
@@ -421,8 +423,8 @@ public class UserGroupsActivity extends AppCompatActivity {
         snackbar.setBackgroundTint(getResources().getColor(com.university.theme.R.color.primaryDarkColor));
         snackbar.show();
     }
-    private void showAlertDialog(String title, String message){
-        AlertDialog.Builder builder = new AlertDialog.Builder(UserGroupsActivity.this);
+    private void showAlertDialog(Context context, String title, String message){
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(title)
                 .setMessage(message)
                 .setPositiveButton("ok", (dialog, which) -> {

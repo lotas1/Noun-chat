@@ -52,16 +52,22 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
             holder.textViewGroupName.setText(model.getGroupName());
         }
 
-        if (model.getGroupName() == null){
+        if (model.getTime() == null){
 
         }else {
             holder.textViewLastMessageTime.setText(model.getTime());
         }
 
-        if (model.getGroupName() == null){
+        if (model.getLastMessage() == null){
 
         }else {
-            holder.textViewLastMessage.setText(model.getLastMessage());
+            if (model.getSender() == null){
+
+            }else {
+                String sender = model.getSender();
+                String lastMessage = model.getLastMessage();
+                holder.textViewLastMessage.setText(sender.concat(": ").concat(lastMessage));
+            }
         }
 
 

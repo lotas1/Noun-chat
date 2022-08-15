@@ -5,31 +5,34 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 
-import com.google.android.gms.tasks.Continuation;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.university.chat.R;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 
 public class NewGroupActivity extends AppCompatActivity {
@@ -37,12 +40,16 @@ public class NewGroupActivity extends AppCompatActivity {
     private ImageView imageViewGroupPics;
     private static final int PICK_IMAGE = 100;
     private FirebaseDatabase database;
-    private DatabaseReference databaseReference;
+    private DatabaseReference databaseGroupReference, mRef;
     private FirebaseStorage storage;
     private StorageReference storageRef, groupImageRef;
     private Uri selectedImageUri;
     private UploadTask uploadTask;
     private FloatingActionButton fab;
+    private FirebaseUser user;
+    private EditText editTextGroupName;
+    private String username = "";
+    private boolean isImageSelected = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,28 +59,46 @@ public class NewGroupActivity extends AppCompatActivity {
         // retrieve an instance of your database
         database = FirebaseDatabase.getInstance();
         // location reference in database
-        databaseReference = database.getReference("Groups");
+        databaseGroupReference = database.getReference("Groups");
         // instance of firebase storage
         storage = FirebaseStorage.getInstance();
         // Create a storage reference from our app
         storageRef = storage.getReference();
+        // get current user details
+        user = FirebaseAuth.getInstance().getCurrentUser();
+        //get user username
+        groupCreatorUsername();
 
         // instantiate views
         toolbar = findViewById(R.id.toolbar_newGroup);
         imageViewGroupPics = findViewById(R.id.imageView_new_group);
         fab = findViewById(R.id.floating_action_button_newGroup);
+        editTextGroupName = findViewById(R.id.editText_new_group);
 
         // close view on click.
         toolbar.setNavigationOnClickListener(v -> finish());
 
         // select image on click
         imageViewGroupPics.setOnClickListener(v -> {
+            // method for accessing images in device
             imageChooser();
+            // boolean for identifying if image is selected for creating of group or not
+            isImageSelected = true;
+
 
         });
         // on click on fab
         fab.setOnClickListener(v -> {
-
+            if (editTextGroupName.getText().toString().equals("")){
+                editTextGroupName.setError("Enter group name");
+            }else {
+                // check if image is selected or not
+                if (isImageSelected){
+                    createGroupWithImage(NewGroupActivity.this, selectedImageUri);
+                }else {
+                    createGroupWithOutImage();
+                }
+            }
         });
     }
 
@@ -91,7 +116,8 @@ public class NewGroupActivity extends AppCompatActivity {
                 //mViewModel.ImageUri(selectedImageUri);
                 imageViewGroupPics.setImageURI(selectedImageUri);
             }else{
-
+                // stores false if image is not selected
+                isImageSelected = false;
             }
 
         }
@@ -107,25 +133,67 @@ public class NewGroupActivity extends AppCompatActivity {
         startActivityForResult(Intent.createChooser(i, "Select Picture"), PICK_IMAGE);
     }
 
-    private void sendWithoutImage(){}
+    private void groupCreatorUsername(){
+        mRef = database.getReference("Users");
+        mRef.child(user.getUid()).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()){
+                     username = Objects.requireNonNull(snapshot.child("username").getValue()).toString();
+                }
 
-    private void sendWithImage(Context context, Uri uri){
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+    // method for user creating a group channel with out a group profile pics
+    private void createGroupWithOutImage(){
+        // get push key.
+        String key = databaseGroupReference.push().getKey();
+        // get group name
+        String groupName = editTextGroupName.getText().toString();
+
+        // hash map containing data to be sent to firebase.
+        // send data to firebase cloud
+        Map<String, Object> map = new HashMap<>();
+        map.put("groupName", groupName);
+        map.put("sender", username);
+        map.put("key", key);
+        map.put("time", getDate());
+        map.put("lastMessage", "welcome to " + groupName + " group");
+        assert key != null;
+        // write data to firebase
+        databaseGroupReference.child(key).setValue(map);
+        // clear map
+        map.clear();
+
+        // close activity
+        finish();
+    }
+
+    // method for user creating a group channel with a group profile pics
+    private void createGroupWithImage(Context context, Uri uri){
         // instance of progress dialog
         ProgressDialog progressBar = new ProgressDialog(context);
         // Create a reference to group profile pics
-        groupImageRef = storageRef.child("groupProfilePics" + uri.getLastPathSegment());
+        groupImageRef = storageRef.child("groupProfilePics/" + uri.getLastPathSegment());
         uploadTask = groupImageRef.putFile(uri);
 
         uploadTask.addOnFailureListener(e -> {
-
+            // update user on failure
+            showAlertDialog(NewGroupActivity.this, "Error", "Creating of group failed." );
         }).addOnProgressListener(snapshot -> {
             // update ui with progress bar
             progressBar.setCancelable(false);
-            progressBar.setMessage("Uploading.........");
+            progressBar.setMessage("Creating group.........");
             progressBar.setProgressStyle(ProgressDialog.STYLE_SPINNER);
             progressBar.show();
         }).addOnSuccessListener(taskSnapshot -> {
-            uploadTask.continueWithTask(task -> {
+            Task<Uri> urlTask = uploadTask.continueWithTask(task -> {
                 if (!task.isSuccessful()) {
                     throw task.getException();
                 }
@@ -134,15 +202,31 @@ public class NewGroupActivity extends AppCompatActivity {
                 return groupImageRef.getDownloadUrl();
             }).addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
+                    // gets image download url
                     Uri downloadUri = task.getResult();
-
                     // get push key.
-                    String key = databaseReference.push().getKey();
+                    String key = databaseGroupReference.push().getKey();
+                    // get group name
+                    String groupName = editTextGroupName.getText().toString();
 
                     // hash map containing data to be sent to firebase.
                     // send data to firebase cloud
                     Map<String, Object> map = new HashMap<>();
-                    //map.put("groupName")
+                    map.put("groupName", groupName);
+                    map.put("sender", username);
+                    map.put("groupImage", downloadUri.toString());
+                    map.put("key", key);
+                    map.put("time", getDate());
+                    map.put("lastMessage", "welcome to " + groupName + " group");
+                    assert key != null;
+                    // write data to firebase
+                    databaseGroupReference.child(key).setValue(map);
+                    // clear map
+                    map.clear();
+                    // dismiss progress bar
+                    progressBar.dismiss();
+                    // close activity
+                    finish();
 
                 } else {
                     // Handle failures
@@ -150,5 +234,24 @@ public class NewGroupActivity extends AppCompatActivity {
                 }
             });
         });
+    }
+
+    // return date in string.
+    public String getDate(){
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("d/MM/yy");
+        String date = simpleDateFormat.format(calendar.getTime());
+        return date;
+    }
+
+    private void showAlertDialog(Context context, String title, String message){
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("ok", (dialog, which) -> {
+
+                });
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 }
