@@ -231,12 +231,12 @@ public class UserGroupsActivity extends AppCompatActivity {
                     // FirebaseUser.getIdToken() instead.
                     uid = user.getUid();
                     Map<String, Object> map = new HashMap<>();
-                    map.put("username", username);
-                    map.put("userId", uid);
-                    map.put("department", department);
-                    map.put("group", department);
-                    map.put("userBan", false);
-                    map.put("userAdmin", false);
+                    map.put(getStringResource(R.string.username), username);
+                    map.put(getStringResource(R.string.userId), uid);
+                    map.put(getStringResource(R.string.department), department);
+                    map.put(getStringResource(R.string.group), department);
+                    map.put(getStringResource(R.string.userBan), false);
+                    map.put(getStringResource(R.string.userAdmin), false);
 
                     // write to firebase
                     myRef.child(uid).setValue(map);
@@ -265,10 +265,10 @@ public class UserGroupsActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()){
-                    autoCompleteTextViewUsernameMyProfile.setText(snapshot.child("username").getValue().toString());
-                    autoCompleteTextViewDepartmentMyProfile.setText(snapshot.child("department").getValue().toString());
-                    eUsername = snapshot.child("username").getValue().toString();
-                    eDepartment = snapshot.child("department").getValue().toString();
+                    autoCompleteTextViewUsernameMyProfile.setText(snapshot.child(getStringResource(R.string.username)).getValue().toString());
+                    autoCompleteTextViewDepartmentMyProfile.setText(snapshot.child(getStringResource(R.string.department)).getValue().toString());
+                    eUsername = snapshot.child(getStringResource(R.string.username)).getValue().toString();
+                    eDepartment = snapshot.child(getStringResource(R.string.department)).getValue().toString();
                 }
             }
 
@@ -342,8 +342,8 @@ public class UserGroupsActivity extends AppCompatActivity {
                     // authenticate with your backend server, if you have one. Use
                     // FirebaseUser.getIdToken() instead.
                     // write to firebase
-                    myRef.child(user.getUid()).child("username").setValue(username);
-                    myRef.child(user.getUid()).child("department").setValue(department);
+                    myRef.child(user.getUid()).child(getStringResource(R.string.username)).setValue(username);
+                    myRef.child(user.getUid()).child(getStringResource(R.string.department)).setValue(department);
 
                     // close dialog
                     dialog.dismiss();
@@ -409,12 +409,12 @@ public class UserGroupsActivity extends AppCompatActivity {
                 }
                 // retrieve current user username and update ui
                 if (snapshot.exists()){
-                    String username = Objects.requireNonNull(snapshot.child("username").getValue()).toString();
+                    String username = Objects.requireNonNull(snapshot.child(getStringResource(R.string.username)).getValue()).toString();
                     toolbar.setSubtitle("@" + username);
                 }
                 // checks if user is an admin and update ui
-                if (snapshot.child("userAdmin").exists()){
-                    isUserAdmin = (boolean) Objects.requireNonNull(snapshot.child("userAdmin").getValue());
+                if (snapshot.child(getStringResource(R.string.userAdmin)).exists()){
+                    isUserAdmin = (boolean) Objects.requireNonNull(snapshot.child(getStringResource(R.string.userAdmin)).getValue());
                 }
 
 
@@ -425,5 +425,9 @@ public class UserGroupsActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    private String getStringResource(int string){
+        return getResources().getString(string);
     }
 }

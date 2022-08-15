@@ -1,5 +1,19 @@
 <resources>
     <string name="app_name">AllGroupUsers</string>
 
+    <string name="userAdmin">userAdmin</string>
+    <string name="username">username</string>
+    <string name="department">department</string>
+    <string name="userId">userId</string>
+    <string name="group">group</string>
+    <string name="userBan">userBan</string>
+
+    <string name="groupName">groupName</string>
+    <string name="sender">sender</string>
+    <string name="key">key</string>
+    <string name="time">time</string>
+    <string name="lastMessage">lastMessage</string>
+    <string name="adminOnly">adminOnly</string>
+    <string name="groupImage">groupImage</string>
 
 </resources>

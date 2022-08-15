@@ -70,7 +70,7 @@
             android:id="@+id/autoCompleteTextview_department_myProfile"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:hint="@string/department"
+            android:hint="@string/Department"
             android:inputType="none"
             android:textSize="15dp" />
     </com.google.android.material.textfield.TextInputLayout>

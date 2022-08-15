@@ -192,8 +192,8 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 // checks if user is an admin and update ui
-                if (snapshot.child("userAdmin").exists()){
-                    isUserAdmin = (boolean) Objects.requireNonNull(snapshot.child("userAdmin").getValue());
+                if (snapshot.child(getStringResource(R.string.userAdmin)).exists()){
+                    isUserAdmin = (boolean) Objects.requireNonNull(snapshot.child(getStringResource(R.string.userAdmin)).getValue());
                 }
 
 
@@ -204,5 +204,8 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
 
             }
         });
+    }
+    private String getStringResource(int string){
+        return context.getResources().getString(string);
     }
 }

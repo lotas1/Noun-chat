@@ -128,7 +128,7 @@ public class GroupMemberActivity extends AppCompatActivity {
                         databaseReferenceBan.child(userID).removeValue();
                     }
                     // update user profile ban status
-                    databaseReferenceUserProfile.child(userID).child("userBan").setValue(blockUser);
+                    databaseReferenceUserProfile.child(userID).child(getStringResource(R.string.userBan)).setValue(blockUser);
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> {
                     dialog.dismiss();
@@ -153,5 +153,8 @@ public class GroupMemberActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         recyclerViewAdapterGroupMember.startListening();
+    }
+    private String getStringResource(int string){
+        return getResources().getString(string);
     }
 }

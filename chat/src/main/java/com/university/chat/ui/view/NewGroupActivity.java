@@ -145,7 +145,7 @@ public class NewGroupActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()){
-                     username = Objects.requireNonNull(snapshot.child("username").getValue()).toString();
+                     username = Objects.requireNonNull(snapshot.child(getStringResource(R.string.username)).getValue()).toString();
                 }
 
             }
@@ -166,16 +166,16 @@ public class NewGroupActivity extends AppCompatActivity {
         // hash map containing data to be sent to firebase.
         // send data to firebase cloud
         Map<String, Object> map = new HashMap<>();
-        map.put("groupName", groupName);
-        map.put("sender", username);
-        map.put("key", key);
-        map.put("time", getDate());
-        map.put("lastMessage", "welcome to " + groupName + " group");
+        map.put(getStringResource(R.string.groupName), groupName);
+        map.put(getStringResource(R.string.sender), username);
+        map.put(getStringResource(R.string.key), key);
+        map.put(getStringResource(R.string.time), getDate());
+        map.put(getStringResource(R.string.lastMessage), "welcome to " + groupName + " group");
         // checks if groups chat will be used by admin only or not.
         if (switchCompat.isChecked()){
-            map.put("adminOnly", true);
+            map.put(getStringResource(R.string.adminOnly), true);
         }else {
-            map.put("adminOnly", false);
+            map.put(getStringResource(R.string.adminOnly), false);
         }
         assert key != null;
         // write data to firebase
@@ -224,17 +224,17 @@ public class NewGroupActivity extends AppCompatActivity {
                     // hash map containing data to be sent to firebase.
                     // send data to firebase cloud
                     Map<String, Object> map = new HashMap<>();
-                    map.put("groupName", groupName);
-                    map.put("sender", username);
-                    map.put("groupImage", downloadUri.toString());
-                    map.put("key", key);
-                    map.put("time", getDate());
-                    map.put("lastMessage", "welcome to " + groupName + " group");
+                    map.put(getStringResource(R.string.groupName), groupName);
+                    map.put(getStringResource(R.string.sender), username);
+                    map.put(getStringResource(R.string.groupImage), downloadUri.toString());
+                    map.put(getStringResource(R.string.key), key);
+                    map.put(getStringResource(R.string.time), getDate());
+                    map.put(getStringResource(R.string.lastMessage), "welcome to " + groupName + " group");
                     // checks if groups chat will be used by admin only or not.
                     if (switchCompat.isChecked()){
-                        map.put("adminOnly", true);
+                        map.put(getStringResource(R.string.adminOnly), true);
                     }else {
-                        map.put("adminOnly", false);
+                        map.put(getStringResource(R.string.adminOnly), false);
                     }
                     assert key != null;
                     // write data to firebase
@@ -271,5 +271,9 @@ public class NewGroupActivity extends AppCompatActivity {
                 });
         AlertDialog dialog = builder.create();
         dialog.show();
+    }
+
+    private String getStringResource(int string){
+        return getResources().getString(string);
     }
 }
