@@ -31,12 +31,14 @@ import com.university.chat.data.model.UserGroupModel;
 import com.university.chat.ui.view.GeneralChatActivity;
 import com.university.chat.ui.view.ImageFullDisplayActivity;
 
+import java.util.Objects;
+
 public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserGroupModel, UserGroupsRecyclerViewAdapter.UserGroupsViewHolder> {
 
     private Context context;
     private FirebaseUser user;
-    private Query queryBan;
-    private boolean isUserBan;
+    private Query queryBan, queryUserProfile;
+    private boolean isUserBan, isUserAdmin;
 
     /**
      * Initialize a {@link RecyclerView.Adapter} that listens to a Firebase query. See
@@ -49,6 +51,7 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
         this.context = context;
         // update ui
         checkIfUserIsBan();
+        checkUserProfile();
     }
 
     @Override
@@ -102,26 +105,23 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
         //on click on itemView
         holder.itemView.setOnClickListener(v -> {
 
-            if (isUserBan){
-                // update UI (blocked user)
-                showAlertDialog(context,"Status", "You have been ban from accessing this group for violation of its rules.");
-            }else {
-                Intent intent = new Intent(context, GeneralChatActivity.class);
-                //Bundle bundle = new Bundle();
-                //bundle.putString("transitionName", "groupPic" + holder.getAbsoluteAdapterPosition());
-                //intent.putExtras(bundle);
-                intent.putExtra("groupName", model.getGroupName());
-                intent.putExtra("groupImage", model.getGroupImage());
-                intent.putExtra("key", model.getKey());
-                intent.putExtra("adminOnly", model.isAdminOnly());
-                // create the transition animation - the images in the layouts
-                // of both activities are defined
+            Intent intent = new Intent(context, GeneralChatActivity.class);
+            //Bundle bundle = new Bundle();
+            //bundle.putString("transitionName", "groupPic" + holder.getAbsoluteAdapterPosition());
+            //intent.putExtras(bundle);
+            intent.putExtra("groupName", model.getGroupName());
+            intent.putExtra("groupImage", model.getGroupImage());
+            intent.putExtra("key", model.getKey());
+            intent.putExtra("adminOnly", model.isAdminOnly());
+            intent.putExtra("isUserBan", isUserBan);
+            intent.putExtra("isUserAdmin", isUserAdmin);
+            // create the transition animation - the images in the layouts
+            // of both activities are defined
 
-                //ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation((Activity) context, holder.imageViewGroupProfilePics, "groupPic" + holder.getAbsoluteAdapterPosition());
-                // start the activity
-                //context.startActivity(intent, options.toBundle());
-                context.startActivity(intent);
-            }
+            //ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation((Activity) context, holder.imageViewGroupProfilePics, "groupPic" + holder.getAbsoluteAdapterPosition());
+            // start the activity
+            //context.startActivity(intent, options.toBundle());
+            context.startActivity(intent);
         });
 
         holder.imageViewGroupProfilePics.setTransitionName("groupPic" + position);
@@ -176,6 +176,27 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
                     // update UI (not blocked user)
                     isUserBan = false;
                 }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+    // check if user has a profile and read profile.
+    private void checkUserProfile(){
+        // firebase location path
+        queryUserProfile = FirebaseDatabase.getInstance().getReference("Users").child(user.getUid());
+        queryUserProfile.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                // checks if user is an admin and update ui
+                if (snapshot.child("userAdmin").exists()){
+                    isUserAdmin = (boolean) Objects.requireNonNull(snapshot.child("userAdmin").getValue());
+                }
+
+
             }
 
             @Override

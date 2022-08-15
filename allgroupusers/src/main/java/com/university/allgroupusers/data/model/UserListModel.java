@@ -2,7 +2,7 @@ package com.university.allgroupusers.data.model;
 
 public class UserListModel {
     String username;
-    boolean ban;
+    boolean userBan;
 
     public String getUsername() {
         return username;
@@ -12,11 +12,11 @@ public class UserListModel {
         this.username = username;
     }
 
-    public boolean isBan() {
-        return ban;
+    public boolean isUserBan() {
+        return userBan;
     }
 
-    public void setBan(boolean ban) {
-        this.ban = ban;
+    public void setUserBan(boolean userBan) {
+        this.userBan = userBan;
     }
 }

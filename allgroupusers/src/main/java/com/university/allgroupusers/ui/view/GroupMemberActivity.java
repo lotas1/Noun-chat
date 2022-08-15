@@ -124,11 +124,11 @@ public class GroupMemberActivity extends AppCompatActivity {
                         // add user to ban path for violation
                         databaseReferenceBan.child(userID).setValue(userID);
                     }else {
-                        // add user to ban path for violation
+                        // remove user from ban path for violation
                         databaseReferenceBan.child(userID).removeValue();
                     }
                     // update user profile ban status
-                    databaseReferenceUserProfile.child(userID).child("ban").setValue(blockUser);
+                    databaseReferenceUserProfile.child(userID).child("userBan").setValue(blockUser);
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> {
                     dialog.dismiss();

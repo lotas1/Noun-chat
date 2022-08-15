@@ -23,8 +23,6 @@ import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
@@ -39,7 +37,6 @@ import com.university.chat.R;
 import com.university.chat.RecyclerViewItemDecoration;
 import com.university.chat.data.model.UserGroupModel;
 import com.university.chat.ui.adapter.UserGroupsRecyclerViewAdapter;
-import com.university.theme.ItemClickSupport;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -62,7 +59,7 @@ public class UserGroupsActivity extends AppCompatActivity {
     private FirebaseUser user;
     private Query queryUserGroup, queryUserProfile;
     private UserGroupsRecyclerViewAdapter userGroupsRecyclerViewAdapter;
-    private boolean admin = false;
+    private boolean isUserAdmin = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,13 +90,13 @@ public class UserGroupsActivity extends AppCompatActivity {
         });
 
         // updates ui with user profile
-        checkUserHasProfile();
+        checkUserProfile();
 
         // toolbar menu navigation
         toolbar.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == R.id.new_group){
                 // check if user is admin
-                if (admin){
+                if (isUserAdmin){
                     // navigate to view for creating group.
                     Intent intent = new Intent(UserGroupsActivity.this, NewGroupActivity.class);
                     startActivity(intent);
@@ -238,8 +235,8 @@ public class UserGroupsActivity extends AppCompatActivity {
                     map.put("userId", uid);
                     map.put("department", department);
                     map.put("group", department);
-                    map.put("ban", false);
-                    map.put("admin", false);
+                    map.put("userBan", false);
+                    map.put("userAdmin", false);
 
                     // write to firebase
                     myRef.child(uid).setValue(map);
@@ -398,10 +395,10 @@ public class UserGroupsActivity extends AppCompatActivity {
         autoCompleteTextView.setOnClickListener(v -> textInputLayout.setError(null));
     }
     // check if user has a profile and read profile.
-    private void checkUserHasProfile(){
+    private void checkUserProfile(){
         // firebase location path
         queryUserProfile = FirebaseDatabase.getInstance().getReference("Users").child(user.getUid());
-        queryUserProfile.addListenerForSingleValueEvent(new ValueEventListener() {
+        queryUserProfile.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 // checks if user has a profile.
@@ -416,8 +413,8 @@ public class UserGroupsActivity extends AppCompatActivity {
                     toolbar.setSubtitle("@" + username);
                 }
                 // checks if user is an admin and update ui
-                if (snapshot.child("admin").exists()){
-                    admin = (boolean) Objects.requireNonNull(snapshot.child("admin").getValue());
+                if (snapshot.child("userAdmin").exists()){
+                    isUserAdmin = (boolean) Objects.requireNonNull(snapshot.child("userAdmin").getValue());
                 }
 
 

@@ -1,5 +1,6 @@
 package com.university.allgroupusers.ui.adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,6 +29,7 @@ public class RecyclerViewAdapterGroupMember extends FirebaseRecyclerAdapter<User
         this.context = context;
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onBindViewHolder(@NonNull GroupMemberViewHolder holder, int position, @NonNull UserListModel model) {
         // update UI
@@ -37,7 +39,7 @@ public class RecyclerViewAdapterGroupMember extends FirebaseRecyclerAdapter<User
             holder.textViewUsername.setText(model.getUsername());
         }
 
-        if (model.isBan()){
+        if (model.isUserBan()){
             holder.textViewUserBanStatus.setText("User is ban for violation");
         }else {
             holder.textViewUserBanStatus.setText("User is not Ban");
