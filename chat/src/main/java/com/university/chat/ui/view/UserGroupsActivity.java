@@ -158,6 +158,8 @@ public class UserGroupsActivity extends AppCompatActivity {
         userGroupsRecyclerViewAdapter.stopListening();
     }
 
+
+
     // delete user account from firebase
     private void deleteUserAccount(){
         user.delete()

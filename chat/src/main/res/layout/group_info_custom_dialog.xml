@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/linearLayout_parentView_profile"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="15dp"
+        android:layout_marginTop="20dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:fontFamily="@font/poppins_medium"
+            android:text="Group Info"
+            android:textColor="@color/black"
+            android:textSize="20dp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/imageView_edit_groupInfo"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_baseline_edit_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <TextView
+        android:id="@+id/textView_groupInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/black"
+        android:layout_marginHorizontal="15dp"
+        android:textSize="16dp"
+        android:text="This is the group info."/>
+
+    <LinearLayout
+        android:id="@+id/linearLayout_editLayout_groupInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="15dp"
+        android:orientation="vertical">
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/textInputLayout_info_groupInfo"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            app:endIconMode="none">
+            <AutoCompleteTextView
+                android:id="@+id/autoCompleteTextview_info_groupInfo"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:textSize="15dp"
+                android:inputType="text"
+                android:hint="Group info"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="15dp"
+            android:orientation="horizontal"
+            android:gravity="center">
+            <Button
+                android:id="@+id/button_cancel_groupInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:text="Cancel"
+                android:textSize="14dp"
+                android:backgroundTint="@color/secondaryDarkColor"
+                android:layout_marginHorizontal="10dp"
+                android:layout_gravity="center_horizontal"
+                style="@style/Widget.App.Button.ContainedButton"/>
+
+            <Button
+                android:id="@+id/button_proceed_groupInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:text="Proceed"
+                android:textSize="14dp"
+                android:layout_marginHorizontal="10dp"
+                android:layout_gravity="center_horizontal"
+                android:drawableEnd="@drawable/ic_baseline_arrow_forward_24_white"
+                style="@style/Widget.App.Button.ContainedButton"/>
+
+
+        </LinearLayout>
+    </LinearLayout>
+
+
+
+
+</LinearLayout>

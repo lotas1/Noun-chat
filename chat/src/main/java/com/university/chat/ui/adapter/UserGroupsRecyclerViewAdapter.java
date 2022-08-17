@@ -31,14 +31,16 @@ import com.university.chat.data.model.UserGroupModel;
 import com.university.chat.ui.view.GeneralChatActivity;
 import com.university.chat.ui.view.ImageFullDisplayActivity;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserGroupModel, UserGroupsRecyclerViewAdapter.UserGroupsViewHolder> {
 
     private Context context;
     private FirebaseUser user;
-    private Query queryBan, queryUserProfile;
+    private Query queryBan, queryUserProfile, queryUserCount;
     private boolean isUserBan, isUserAdmin;
+    private ArrayList<String> usersArray;
 
     /**
      * Initialize a {@link RecyclerView.Adapter} that listens to a Firebase query. See
@@ -52,6 +54,7 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
         // update ui
         checkIfUserIsBan();
         checkUserProfile();
+        usersArray = new ArrayList<>();
     }
 
     @Override
@@ -115,6 +118,8 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
             intent.putExtra("adminOnly", model.isAdminOnly());
             intent.putExtra("isUserBan", isUserBan);
             intent.putExtra("isUserAdmin", isUserAdmin);
+            intent.putExtra("usersCount", usersArray.size());
+            intent.putExtra("groupKey", model.getKey());
             // create the transition animation - the images in the layouts
             // of both activities are defined
 
@@ -149,16 +154,7 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
         }
     }
 
-    private void showAlertDialog(Context context, String title, String message){
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle(title)
-                .setMessage(message)
-                .setPositiveButton("ok", (dialog, which) -> {
 
-                });
-        AlertDialog dialog = builder.create();
-        dialog.show();
-    }
     // method for checking is user is banned or not
     private void checkIfUserIsBan(){
         // get current user details
@@ -195,8 +191,21 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
                 if (snapshot.child(getStringResource(R.string.userAdmin)).exists()){
                     isUserAdmin = (boolean) Objects.requireNonNull(snapshot.child(getStringResource(R.string.userAdmin)).getValue());
                 }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
 
-
+            }
+        });
+        // get users count and update ui
+        queryUserCount = FirebaseDatabase.getInstance().getReference("Users");
+        queryUserCount.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                // loop through users data and store in array list
+                for (DataSnapshot datasnapshot: snapshot.getChildren()) {
+                    usersArray.add(datasnapshot.toString());
+                }
             }
 
             @Override

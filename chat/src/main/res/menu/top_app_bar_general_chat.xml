@@ -4,10 +4,18 @@
 
 
     <item
-        android:title="Profile"
+        android:id="@+id/groupInfo"
+        android:title="Group Info"
         app:showAsAction="never"/>
 
     <item
-        android:title="Log Out"
+        android:id="@+id/muteGroup"
+        android:title="Mute"
         app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/deleteGroup"
+        android:title="Delete Group"
+        app:showAsAction="never"/>
+
 </menu>
