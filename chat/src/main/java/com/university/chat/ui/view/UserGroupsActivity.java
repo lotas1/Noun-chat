@@ -236,7 +236,6 @@ public class UserGroupsActivity extends AppCompatActivity {
                     map.put(getStringResource(R.string.username), username);
                     map.put(getStringResource(R.string.userId), uid);
                     map.put(getStringResource(R.string.department), department);
-                    map.put(getStringResource(R.string.group), department);
                     map.put(getStringResource(R.string.userBan), false);
                     map.put(getStringResource(R.string.userAdmin), false);
 
@@ -372,30 +371,6 @@ public class UserGroupsActivity extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
-    // show snack bar
-    private void showSnackBar(String label){
-        Snackbar snackbar = Snackbar.make(findViewById(R.id.coordinatorLayout_userGroups),label,Snackbar.LENGTH_LONG);
-        snackbar.setBackgroundTint(getResources().getColor(com.university.theme.R.color.primaryDarkColor));
-        snackbar.show();
-    }
-    private void showAlertDialog(Context context, String title, String message){
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle(title)
-                .setMessage(message)
-                .setPositiveButton("ok", (dialog, which) -> {
-
-                });
-        AlertDialog dialog = builder.create();
-        dialog.show();
-    }
-    // checks if autocomplete text view is empty.
-    private boolean isEmpty(AutoCompleteTextView autoCompleteTextView) {
-        return TextUtils.isEmpty(autoCompleteTextView.getEditableText());
-    }
-    // clears textInput layout error
-    private void clearError(AutoCompleteTextView autoCompleteTextView, TextInputLayout textInputLayout){
-        autoCompleteTextView.setOnClickListener(v -> textInputLayout.setError(null));
-    }
     // check if user has a profile and read profile.
     private void checkUserProfile(){
         // firebase location path
@@ -427,6 +402,30 @@ public class UserGroupsActivity extends AppCompatActivity {
 
             }
         });
+    }
+    // show snack bar
+    private void showSnackBar(String label){
+        Snackbar snackbar = Snackbar.make(findViewById(R.id.coordinatorLayout_userGroups),label,Snackbar.LENGTH_LONG);
+        snackbar.setBackgroundTint(getResources().getColor(com.university.theme.R.color.primaryDarkColor));
+        snackbar.show();
+    }
+    private void showAlertDialog(Context context, String title, String message){
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("ok", (dialog, which) -> {
+
+                });
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+    // checks if autocomplete text view is empty.
+    private boolean isEmpty(AutoCompleteTextView autoCompleteTextView) {
+        return TextUtils.isEmpty(autoCompleteTextView.getEditableText());
+    }
+    // clears textInput layout error
+    private void clearError(AutoCompleteTextView autoCompleteTextView, TextInputLayout textInputLayout){
+        autoCompleteTextView.setOnClickListener(v -> textInputLayout.setError(null));
     }
 
     private String getStringResource(int string){

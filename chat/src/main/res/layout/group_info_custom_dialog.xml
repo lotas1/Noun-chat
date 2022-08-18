@@ -44,9 +44,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textColor="@color/black"
-        android:layout_marginHorizontal="15dp"
+        android:layout_marginHorizontal="16dp"
+        android:fontFamily="@font/poppins"
+        android:layout_marginBottom="20dp"
         android:textSize="16dp"
-        android:text="This is the group info."/>
+        android:text="Group Info"/>
 
     <LinearLayout
         android:id="@+id/linearLayout_editLayout_groupInfo"
@@ -57,7 +59,7 @@
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/textInputLayout_info_groupInfo"
             android:layout_width="match_parent"
-            android:layout_height="55dp"
+            android:layout_height="wrap_content"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             app:endIconMode="none">
             <AutoCompleteTextView
@@ -65,7 +67,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:textSize="15dp"
-                android:inputType="text"
                 android:hint="Group info"/>
         </com.google.android.material.textfield.TextInputLayout>
 

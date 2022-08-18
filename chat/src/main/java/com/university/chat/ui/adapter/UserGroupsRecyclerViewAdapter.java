@@ -105,27 +105,21 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
             // start the activity
             context.startActivity(intent, options.toBundle());
         });
+
         //on click on itemView
         holder.itemView.setOnClickListener(v -> {
 
             Intent intent = new Intent(context, GeneralChatActivity.class);
-            //Bundle bundle = new Bundle();
-            //bundle.putString("transitionName", "groupPic" + holder.getAbsoluteAdapterPosition());
-            //intent.putExtras(bundle);
             intent.putExtra("groupName", model.getGroupName());
-            intent.putExtra("groupImage", model.getGroupImage());
             intent.putExtra("key", model.getKey());
             intent.putExtra("adminOnly", model.isAdminOnly());
             intent.putExtra("isUserBan", isUserBan);
             intent.putExtra("isUserAdmin", isUserAdmin);
             intent.putExtra("usersCount", usersArray.size());
             intent.putExtra("groupKey", model.getKey());
-            // create the transition animation - the images in the layouts
-            // of both activities are defined
-
-            //ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation((Activity) context, holder.imageViewGroupProfilePics, "groupPic" + holder.getAbsoluteAdapterPosition());
-            // start the activity
-            //context.startActivity(intent, options.toBundle());
+            if (model.getGroupImage() != null){
+                intent.putExtra("groupImage", model.getGroupImage());
+            }
             context.startActivity(intent);
         });
 
@@ -162,7 +156,7 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
         // firebase location path
         queryBan = FirebaseDatabase.getInstance().getReference("BanUser");
         // listener for changes in the data location
-        queryBan.addListenerForSingleValueEvent(new ValueEventListener() {
+        queryBan.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.child(user.getUid()).exists()){
@@ -184,7 +178,7 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
     private void checkUserProfile(){
         // firebase location path
         queryUserProfile = FirebaseDatabase.getInstance().getReference("Users").child(user.getUid());
-        queryUserProfile.addListenerForSingleValueEvent(new ValueEventListener() {
+        queryUserProfile.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 // checks if user is an admin and update ui
@@ -202,9 +196,11 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
         queryUserCount.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                // loop through users data and store in array list
-                for (DataSnapshot datasnapshot: snapshot.getChildren()) {
-                    usersArray.add(datasnapshot.toString());
+                if (snapshot.exists()){
+                    // loop through users data and store in array list
+                    for (DataSnapshot datasnapshot: snapshot.getChildren()) {
+                        usersArray.add(datasnapshot.toString());
+                    }
                 }
             }
 
