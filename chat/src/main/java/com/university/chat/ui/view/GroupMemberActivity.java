@@ -1,13 +1,15 @@
-package com.university.allgroupusers.ui.view;
+package com.university.chat.ui.view;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.AlertDialog;
 import android.os.Bundle;
+import android.view.View;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.database.DataSnapshot;
@@ -16,9 +18,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-import com.university.allgroupusers.R;
-import com.university.allgroupusers.data.model.UserListModel;
-import com.university.allgroupusers.ui.adapter.RecyclerViewAdapterGroupMember;
+import com.university.chat.R;
+import com.university.chat.data.model.UserListModel;
+import com.university.chat.ui.adapter.RecyclerViewAdapterGroupMember;
 import com.university.theme.ItemClickSupport;
 
 import java.util.ArrayList;
@@ -30,6 +32,7 @@ public class GroupMemberActivity extends AppCompatActivity {
     private FirebaseDatabase firebaseDatabase;
     private DatabaseReference databaseReferenceBan, databaseReferenceUserProfile;
     private ArrayList<String> usersArrayList;
+    private Toolbar toolbar;
 
 
     @Override
@@ -39,6 +42,9 @@ public class GroupMemberActivity extends AppCompatActivity {
 
         // instantiate view
         recyclerView = findViewById(R.id.recyclerView_group_members);
+        toolbar = findViewById(R.id.toolbar_members);
+        // close activity on click
+        toolbar.setNavigationOnClickListener(v -> finish());
 
         //retrieve an instance of your database
         firebaseDatabase = FirebaseDatabase.getInstance();

@@ -1,4 +1,4 @@
-package com.university.allgroupusers.ui.adapter;
+package com.university.chat.ui.adapter;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -12,8 +12,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
-import com.university.allgroupusers.R;
-import com.university.allgroupusers.data.model.UserListModel;
+import com.university.chat.R;
+import com.university.chat.data.model.UserListModel;
 
 public class RecyclerViewAdapterGroupMember extends FirebaseRecyclerAdapter<UserListModel, RecyclerViewAdapterGroupMember.GroupMemberViewHolder> {
     private Context context;

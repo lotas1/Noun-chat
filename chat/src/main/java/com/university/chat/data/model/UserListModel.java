@@ -1,4 +1,4 @@
-package com.university.allgroupusers.data.model;
+package com.university.chat.data.model;
 
 public class UserListModel {
     String username;

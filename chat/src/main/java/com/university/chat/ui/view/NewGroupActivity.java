@@ -41,19 +41,19 @@ public class NewGroupActivity extends AppCompatActivity {
     private Toolbar toolbar;
     private ImageView imageViewGroupPics;
     private SwitchCompat switchCompat;
-    private static final int PICK_IMAGE = 100;
     private FirebaseDatabase database;
     private DatabaseReference databaseGroupReference;
     private FirebaseStorage storage;
     private Query queryUserUsername;
     private StorageReference storageRef, groupImageRef;
-    private Uri selectedImageUri;
     private UploadTask uploadTask;
     private FloatingActionButton fab;
     private FirebaseUser user;
     private EditText editTextGroupName;
     private String username = "";
+    private static final int PICK_IMAGE = 100;
     private boolean isImageSelected = false;
+    private Uri selectedImageUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -170,6 +170,7 @@ public class NewGroupActivity extends AppCompatActivity {
         map.put(getStringResource(R.string.sender), username);
         map.put(getStringResource(R.string.key), key);
         map.put(getStringResource(R.string.time), getDate());
+        map.put(getStringResource(R.string.groupImage), null);
         map.put(getStringResource(R.string.lastMessage), "welcome to " + groupName + " group");
         // checks if groups chat will be used by admin only or not.
         if (switchCompat.isChecked()){
@@ -197,7 +198,7 @@ public class NewGroupActivity extends AppCompatActivity {
 
         uploadTask.addOnFailureListener(e -> {
             // update user on failure
-            showAlertDialog(NewGroupActivity.this, "Error", "Creating of group failed." );
+            showAlertDialog(context, "Error", "Creating of group failed." );
         }).addOnProgressListener(snapshot -> {
             // update ui with progress bar
             progressBar.setCancelable(false);

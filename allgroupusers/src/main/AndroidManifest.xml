@@ -10,7 +10,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.NounChat">
         <activity
-            android:name=".ui.view.GroupMemberActivity"
+            android:name="com.university.chat.ui.view.GroupMemberActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.NounChat.NoActionBar" />

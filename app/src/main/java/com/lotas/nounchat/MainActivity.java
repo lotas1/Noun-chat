@@ -6,7 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 
-import com.university.allgroupusers.ui.view.GroupMemberActivity;
+import com.university.chat.ui.view.GroupMemberActivity;
 import com.university.chat.ui.view.authentication.SignUpIntroActivity;
 
 public class MainActivity extends AppCompatActivity {
@@ -31,8 +31,8 @@ public class MainActivity extends AppCompatActivity {
 
         // admin
         buttonAdmin.setOnClickListener(v -> {
-            Intent intent1 = new Intent(this, GroupMemberActivity.class);
-            startActivity(intent1);
+            //Intent intent1 = new Intent(this, GroupMemberActivity.class);
+            //startActivity(intent1);
         });
     }
 }
