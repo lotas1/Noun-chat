@@ -4,8 +4,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -18,14 +19,14 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
+import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
@@ -40,8 +41,12 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.university.chat.R;
+import com.university.chat.data.model.ChatModel;
+import com.university.chat.ui.adapter.RecyclerViewAdapterChat;
 import com.university.chat.ui.viewModel.GeneralChatViewModel;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,18 +54,21 @@ public class GeneralChatActivity extends AppCompatActivity {
     private Toolbar toolbar;
     private LinearLayout linearLayoutUser, linearLayoutAdmin;
     private TextView textViewMessage, textViewGroupInfoMessage;
-    private ImageView imageViewGroupInfoEdit, imageViewDeleteGroupImage, imageViewGroupImage;
+    private ImageView imageViewGroupInfoEdit, imageViewDeleteGroupImage, imageViewGroupImage, imageViewSendUserData;
     private LinearLayout linearEditLayoutGroupInfo;
     private AutoCompleteTextView autoCompleteTextViewInfo;
     private TextInputLayout textInputLayoutInfo;
     private Button buttonCancel, buttonProceed;
+    private EditText editTextUserMessage;
+    private RecyclerView recyclerViewChatData;
+    private RecyclerViewAdapterChat recyclerViewAdapterChat;
     private MenuItem item1;
-    private Query queryBan, queryUser;
+    private Query queryBan, queryUser, queryChatMessages;
     private FirebaseUser user;
     private FirebaseDatabase database;
-    private DatabaseReference myRef;
+    private DatabaseReference groupRef, userRef, chatRef;
     boolean  isUserBan, isUserAdmin;
-    String groupName, groupKey, groupImage;
+    private String groupName, groupKey, groupImage, username;
     int usersCount;
     private boolean isGroupMute;
     private static final int PICK_IMAGE = 100;
@@ -79,9 +87,13 @@ public class GeneralChatActivity extends AppCompatActivity {
         // retrieve an instance of your database
         database = FirebaseDatabase.getInstance();
         // location reference in database
-        myRef = FirebaseDatabase.getInstance().getReference("Groups");
+        groupRef = database.getReference("Groups");
+        userRef = database.getReference("Users");
+        chatRef = database.getReference();
         // instance of firebase storage
         storage = FirebaseStorage.getInstance();
+        // get current user details
+        user = FirebaseAuth.getInstance().getCurrentUser();
         // Create a storage reference from our app
         storageRef = storage.getReference();
         // instantiate view model
@@ -93,6 +105,9 @@ public class GeneralChatActivity extends AppCompatActivity {
         linearLayoutAdmin = findViewById(R.id.linearLayout_adminOnly_generalChat);
         textViewMessage = findViewById(R.id.textView_message_generalChat);
         item1 = toolbar.getMenu().findItem(R.id.muteGroup);
+        editTextUserMessage = findViewById(R.id.edittext_inputMessage_generalChat);
+        imageViewSendUserData = findViewById(R.id.imageView_sendMessage_generalChat);
+        recyclerViewChatData = findViewById(R.id.recyclerView_generalChat);
 
         // instance of bundle
         Bundle b = getIntent().getExtras();
@@ -169,10 +184,68 @@ public class GeneralChatActivity extends AppCompatActivity {
         // init onCreate
         init();
 
+
+        chatRecyclerView(GeneralChatActivity.this);
+
+        imageViewSendUserData.setOnClickListener(v -> {
+            if (TextUtils.isEmpty(editTextUserMessage.getText())){
+
+            }else {
+                if (user != null){
+                    String uid, message, key;
+
+                    uid = user.getUid();
+                    message = editTextUserMessage.getText().toString();
+                    key = chatRef.push().getKey();
+
+                    Map<String, Object> map = new HashMap<>();
+                    map.put(getStringResource(R.string.username), username);
+                    map.put(getStringResource(R.string.message), message);
+                    map.put(getStringResource(R.string.time), getDate());
+                    map.put(getStringResource(R.string.userId), uid);
+                    chatRef.child(groupKey).child(key).setValue(map);
+                    map.clear();
+                    // update last message sender.
+                    groupRef.child(groupKey).child(getStringResource(R.string.sender)).setValue(username);
+                    groupRef.child(groupKey).child(getStringResource(R.string.lastMessage)).setValue(message);
+                    // clear view.
+                    editTextUserMessage.setText(null);
+
+                }
+            }
+        });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        recyclerViewAdapterChat.stopListening();
+    }
+
+    private void chatRecyclerView(Context context){
+        // To display the Recycler view linearly
+        LinearLayoutManager layoutManager = new LinearLayoutManager(context,LinearLayoutManager.VERTICAL, false);
+        layoutManager.setStackFromEnd(true);
+        recyclerViewChatData.setLayoutManager(layoutManager);
+
+        // firebase location path
+        queryChatMessages = FirebaseDatabase.getInstance().getReference(groupKey);
+        // It is a class provide by the FirebaseUI to make a
+        // query in the database to fetch appropriate data
+        FirebaseRecyclerOptions<ChatModel> options = new FirebaseRecyclerOptions.Builder<ChatModel>()
+                .setQuery(queryChatMessages, ChatModel.class)
+                .build();
+        // Connecting object of required Adapter class to
+        // the Adapter class itself
+        recyclerViewAdapterChat = new RecyclerViewAdapterChat(options, GeneralChatActivity.this);
+        // Connecting Adapter class with the Recycler view
+        // Function to tell the app to start getting data from database
+        recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
+        recyclerViewAdapterChat.startListening();
     }
 
     private void init(){
-        myRef.child(groupKey).child(getStringResource(R.string.adminOnly)).addValueEventListener(new ValueEventListener() {
+        groupRef.child(groupKey).child(getStringResource(R.string.adminOnly)).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()){
@@ -188,13 +261,26 @@ public class GeneralChatActivity extends AppCompatActivity {
 
             }
         });
-        myRef.child(groupKey).child(getStringResource(R.string.groupImage)).addValueEventListener(new ValueEventListener() {
+        groupRef.child(groupKey).child(getStringResource(R.string.groupImage)).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.exists()){
                     groupImage = snapshot.getValue().toString();
                 }
 
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+        userRef.child(user.getUid()).child(getStringResource(R.string.username)).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()){
+                    username = snapshot.getValue().toString();
+                }
             }
 
             @Override
@@ -234,12 +320,12 @@ public class GeneralChatActivity extends AppCompatActivity {
             storageReference.delete().addOnSuccessListener(unused -> {
                 // File deleted successfully
                 // delete group
-                myRef.child(groupKey).removeValue();
+                groupRef.child(groupKey).removeValue();
                 finish();
             });
         }else {
             // delete group
-            myRef.child(groupKey).removeValue();
+            groupRef.child(groupKey).removeValue();
             finish();
         }
 
@@ -349,7 +435,7 @@ public class GeneralChatActivity extends AppCompatActivity {
                     // check if there is previous image.
                     if (isPreviousImage) {
                         // update group info
-                        myRef.child(groupKey).child(getStringResource(R.string.groupInfo)).setValue(info);
+                        groupRef.child(groupKey).child(getStringResource(R.string.groupInfo)).setValue(info);
                         dialog.dismiss();
                         finish();
                     }else {
@@ -359,16 +445,16 @@ public class GeneralChatActivity extends AppCompatActivity {
                             StorageReference storageReference = firebaseStorage.getReferenceFromUrl(groupImage);
                             storageReference.delete().addOnSuccessListener(unused -> {
                                 // update group info
-                                myRef.child(groupKey).child(getStringResource(R.string.groupImage)).setValue(null);
-                                myRef.child(groupKey).child(getStringResource(R.string.groupInfo)).setValue(info);
+                                groupRef.child(groupKey).child(getStringResource(R.string.groupImage)).setValue(null);
+                                groupRef.child(groupKey).child(getStringResource(R.string.groupInfo)).setValue(info);
                                 Toast.makeText(GeneralChatActivity.this, "updated successful", Toast.LENGTH_SHORT).show();
                                 dialog.dismiss();
                                 finish();
                             });
                         }else {
                             // update group info
-                            myRef.child(groupKey).child(getStringResource(R.string.groupImage)).setValue(null);
-                            myRef.child(groupKey).child(getStringResource(R.string.groupInfo)).setValue(info);
+                            groupRef.child(groupKey).child(getStringResource(R.string.groupImage)).setValue(null);
+                            groupRef.child(groupKey).child(getStringResource(R.string.groupInfo)).setValue(info);
                             dialog.dismiss();
                             finish();
                         }
@@ -414,8 +500,8 @@ public class GeneralChatActivity extends AppCompatActivity {
                     // gets image download url
                     Uri downloadUri = task.getResult();
                     // update group info
-                    myRef.child(groupKey).child(getStringResource(R.string.groupImage)).setValue(downloadUri.toString());
-                    myRef.child(groupKey).child(getStringResource(R.string.groupInfo)).setValue(info);
+                    groupRef.child(groupKey).child(getStringResource(R.string.groupImage)).setValue(downloadUri.toString());
+                    groupRef.child(groupKey).child(getStringResource(R.string.groupInfo)).setValue(info);
                     // dismiss progress bar
                     progressBar.dismiss();
                     Toast.makeText(context, "updated successful", Toast.LENGTH_SHORT).show();
@@ -485,7 +571,7 @@ public class GeneralChatActivity extends AppCompatActivity {
 
                 })
                 .setPositiveButton(positiveButton, (dialog, which) -> {
-                    myRef.child(groupKey).child(getStringResource(R.string.adminOnly)).setValue(muteorunmute);
+                    groupRef.child(groupKey).child(getStringResource(R.string.adminOnly)).setValue(muteorunmute);
 
                 });
         AlertDialog dialog = builder.create();
@@ -515,5 +601,12 @@ public class GeneralChatActivity extends AppCompatActivity {
     // checks if autocomplete text view is empty.
     private boolean isEmpty(AutoCompleteTextView autoCompleteTextView) {
         return TextUtils.isEmpty(autoCompleteTextView.getEditableText());
+    }
+    // return date in string.
+    public String getDate(){
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMM d-hh:mmaaa");
+        String date = simpleDateFormat.format(calendar.getTime());
+        return date;
     }
 }

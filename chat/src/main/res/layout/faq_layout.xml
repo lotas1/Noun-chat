@@ -14,7 +14,7 @@
             android:id="@+id/textView3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:drawableStart="@drawable/ic_baseline_live_help_24"
+            android:drawableStart="@drawable/ic_outline_help_outline_24"
             android:textStyle="bold"
             android:gravity="center_vertical"
             android:text="Frequently Asked Question"

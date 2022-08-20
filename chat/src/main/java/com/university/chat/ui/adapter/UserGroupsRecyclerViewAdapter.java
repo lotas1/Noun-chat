@@ -78,12 +78,8 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
             holder.textViewLastMessageTime.setText(model.getTime());
         }
 
-        if (model.getLastMessage() == null){
-
-        }else {
-            if (model.getSender() == null){
-
-            }else {
+        if (model.getLastMessage() != null){
+            if (model.getSender() != null){
                 String sender = model.getSender();
                 String lastMessage = model.getLastMessage();
                 holder.textViewLastMessage.setText(sender.concat(": ").concat(lastMessage));

@@ -35,8 +35,10 @@
         app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
         android:orientation="vertical">
         <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView_generalChat"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:padding="5dp"
             android:layout_weight="1"/>
 
         <LinearLayout
@@ -51,6 +53,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
                 <EditText
+                    android:id="@+id/edittext_inputMessage_generalChat"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@color/transparent"
@@ -61,6 +64,7 @@
                     android:layout_weight="1"/>
 
                 <ImageView
+                    android:id="@+id/imageView_sendMessage_generalChat"
                     android:layout_width="45dp"
                     android:layout_height="45dp"
                     android:layout_gravity="bottom"
