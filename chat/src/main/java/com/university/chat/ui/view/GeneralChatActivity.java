@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -27,6 +28,7 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
@@ -54,8 +56,9 @@ public class GeneralChatActivity extends AppCompatActivity {
     private Toolbar toolbar;
     private LinearLayout linearLayoutUser, linearLayoutAdmin;
     private TextView textViewMessage, textViewGroupInfoMessage;
-    private ImageView imageViewGroupInfoEdit, imageViewDeleteGroupImage, imageViewGroupImage, imageViewSendUserData;
+    private ImageView imageViewGroupInfoEdit, imageViewDeleteGroupImage, imageViewGroupImage, imageViewSendUserData, imageViewChatImageChooser, imageViewFullDisplay, imageViewDeleteChatImage;
     private LinearLayout linearEditLayoutGroupInfo;
+    private ConstraintLayout constraintLayoutImageFullDisplayParentLayout;
     private AutoCompleteTextView autoCompleteTextViewInfo;
     private TextInputLayout textInputLayoutInfo;
     private Button buttonCancel, buttonProceed;
@@ -72,10 +75,10 @@ public class GeneralChatActivity extends AppCompatActivity {
     int usersCount;
     private boolean isGroupMute;
     private static final int PICK_IMAGE = 100;
-    private boolean isImageSelected, isPreviousImage = false;
-    private Uri selectedImageUri;
+    private boolean isGroupImageSelected, isChatImageSelected, isPreviousImage = false, isChatImageChooser = false;
+    private Uri uriGroupImage, uriChatImage;
     private GeneralChatViewModel generalChatViewModel;
-    private StorageReference storageRef, groupImageRef;
+    private StorageReference storageRef, groupImageStorageRef, chatImageStorageRef;
     private FirebaseStorage storage;
     private UploadTask uploadTask;
 
@@ -108,6 +111,10 @@ public class GeneralChatActivity extends AppCompatActivity {
         editTextUserMessage = findViewById(R.id.edittext_inputMessage_generalChat);
         imageViewSendUserData = findViewById(R.id.imageView_sendMessage_generalChat);
         recyclerViewChatData = findViewById(R.id.recyclerView_generalChat);
+        imageViewChatImageChooser = findViewById(R.id.imageView_imageChooser_generalChat);
+        imageViewFullDisplay = findViewById(R.id.imageView_viewSelectedImage_generalChat);
+        constraintLayoutImageFullDisplayParentLayout = findViewById(R.id.constrainLayout_imageViewDisplay_parentLayout);
+        imageViewDeleteChatImage = findViewById(R.id.imageView_delete_Message_generalChat);
 
         // instance of bundle
         Bundle b = getIntent().getExtras();
@@ -182,35 +189,34 @@ public class GeneralChatActivity extends AppCompatActivity {
         });
 
         // init onCreate
-        init();
+        init(GeneralChatActivity.this);
 
 
-        chatRecyclerView(GeneralChatActivity.this);
+        // on click for choosing image to send along user message
+        imageViewChatImageChooser.setOnClickListener(v -> {
+            isChatImageChooser = true;
+            imageChooser();
 
+        });
+        // on click delete image selected for chat.
+        imageViewDeleteChatImage.setOnClickListener(v -> {
+            // remove chat image and set isChatImageChooser & isChatImageSelected to false
+            constraintLayoutImageFullDisplayParentLayout.setVisibility(View.GONE);
+            isChatImageChooser = false;
+            isChatImageSelected = false;
+        });
+        // onclick sends sends user message to cloud
         imageViewSendUserData.setOnClickListener(v -> {
             if (TextUtils.isEmpty(editTextUserMessage.getText())){
 
             }else {
                 if (user != null){
-                    String uid, message, key;
-
-                    uid = user.getUid();
-                    message = editTextUserMessage.getText().toString();
-                    key = chatRef.push().getKey();
-
-                    Map<String, Object> map = new HashMap<>();
-                    map.put(getStringResource(R.string.username), username);
-                    map.put(getStringResource(R.string.message), message);
-                    map.put(getStringResource(R.string.time), getDate());
-                    map.put(getStringResource(R.string.userId), uid);
-                    chatRef.child(groupKey).child(key).setValue(map);
-                    map.clear();
-                    // update last message sender.
-                    groupRef.child(groupKey).child(getStringResource(R.string.sender)).setValue(username);
-                    groupRef.child(groupKey).child(getStringResource(R.string.lastMessage)).setValue(message);
-                    // clear view.
-                    editTextUserMessage.setText(null);
-
+                    if (isChatImageSelected){
+                        sendMessageWithImage(GeneralChatActivity.this, uriChatImage);
+                    }else {
+                        // send user message to firebase without image.
+                        sendMessageWithOutImage();
+                    }
                 }
             }
         });
@@ -220,6 +226,90 @@ public class GeneralChatActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         recyclerViewAdapterChat.stopListening();
+    }
+
+    private void sendMessageWithImage(Context context, Uri uri){
+        // instance of progress dialog
+        ProgressDialog progressBar = new ProgressDialog(context);
+        // Create a reference to group profile pics
+        chatImageStorageRef = storageRef.child(groupKey).child(uri.getLastPathSegment());
+        uploadTask = chatImageStorageRef.putFile(uri);
+
+        uploadTask.addOnFailureListener(e -> {
+            // update user on failure
+            showAlertDialog(context, "Error", "Check your network" );
+        }).addOnProgressListener(snapshot -> {
+            // update ui with progress bar
+            progressBar.setCancelable(false);
+            progressBar.setMessage("Sending...");
+            progressBar.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progressBar.show();
+        }).addOnSuccessListener(taskSnapshot -> {
+            Task<Uri> urlTask = uploadTask.continueWithTask(task -> {
+                if (!task.isSuccessful()) {
+                    throw task.getException();
+                }
+
+                // Continue with the task to get the download URL
+                return chatImageStorageRef.getDownloadUrl();
+            }).addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    // gets image download url
+                    Uri downloadUri = task.getResult();
+
+                    String uid, message, key;
+                    uid = user.getUid();
+                    message = editTextUserMessage.getText().toString();
+                    key = chatRef.push().getKey();
+
+                    Map<String, Object> map = new HashMap<>();
+                    map.put(getStringResource(R.string.username), username);
+                    map.put(getStringResource(R.string.message), message);
+                    map.put(getStringResource(R.string.time), getDate());
+                    map.put(getStringResource(R.string.userId), uid);
+                    map.put(getStringResource(R.string.image), downloadUri.toString());
+                    assert key != null;
+                    chatRef.child(groupKey).child(key).setValue(map);
+                    map.clear();
+                    // update last message sender.
+                    groupRef.child(groupKey).child(getStringResource(R.string.sender)).setValue(username);
+                    groupRef.child(groupKey).child(getStringResource(R.string.lastMessage)).setValue(message);
+                    // clear view.
+                    editTextUserMessage.setText(null);
+                    // remove chat image and set isChatImageChooser & isChatImageSelected to false
+                    constraintLayoutImageFullDisplayParentLayout.setVisibility(View.GONE);
+                    isChatImageChooser = false;
+                    isChatImageSelected = false;
+                    // dismiss progress bar
+                    progressBar.dismiss();
+
+                } else {
+                    // Handle failures
+                    // ...
+                }
+            });
+        });
+    }
+    private void sendMessageWithOutImage(){
+        String uid, message, key;
+
+        uid = user.getUid();
+        message = editTextUserMessage.getText().toString();
+        key = chatRef.push().getKey();
+
+        Map<String, Object> map = new HashMap<>();
+        map.put(getStringResource(R.string.username), username);
+        map.put(getStringResource(R.string.message), message);
+        map.put(getStringResource(R.string.time), getDate());
+        map.put(getStringResource(R.string.userId), uid);
+        assert key != null;
+        chatRef.child(groupKey).child(key).setValue(map);
+        map.clear();
+        // update last message sender.
+        groupRef.child(groupKey).child(getStringResource(R.string.sender)).setValue(username);
+        groupRef.child(groupKey).child(getStringResource(R.string.lastMessage)).setValue(message);
+        // clear view.
+        editTextUserMessage.setText(null);
     }
 
     private void chatRecyclerView(Context context){
@@ -244,7 +334,9 @@ public class GeneralChatActivity extends AppCompatActivity {
         recyclerViewAdapterChat.startListening();
     }
 
-    private void init(){
+    private void init(Context context){
+
+        chatRecyclerView(context);
         groupRef.child(groupKey).child(getStringResource(R.string.adminOnly)).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -293,42 +385,77 @@ public class GeneralChatActivity extends AppCompatActivity {
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        // if isMessageImageChooser is true it indicates get image uri for user message (else) get image for group profile pics
+        if (isChatImageChooser){
+            // compare the requestCode with the
+            // PICK_IMAGE constant
+            if (requestCode == PICK_IMAGE) {
+                if (data != null){
+                    uriChatImage = data.getData();
+                    // stores true if image is selected
+                    isChatImageSelected = true;
+                    constraintLayoutImageFullDisplayParentLayout.setVisibility(View.VISIBLE);
+                    imageViewFullDisplay.setImageURI(uriChatImage);
+                }else{
+                    // stores false if image is not selected
+                    isChatImageSelected = false;
+                }
 
-        // compare the requestCode with the
-        // PICK_IMAGE constant
-        if (requestCode == PICK_IMAGE) {
-            if (data != null){
-                // stores true if image is selected
-                isImageSelected = true;
-                // Get the url of the image from data
-                // set uri to view model
-                generalChatViewModel.setMutableLiveDataUri(data.getData());
-
-            }else{
-                // stores false if image is not selected
-                isImageSelected = false;
             }
+        }else {
+            // compare the requestCode with the
+            // PICK_IMAGE constant
+            if (requestCode == PICK_IMAGE) {
+                if (data != null){
+                    // stores true if image is selected
+                    isGroupImageSelected = true;
+                    // Get the url of the image from data
+                    // set uri to view model
+                    generalChatViewModel.setMutableLiveDataUri(data.getData());
 
+                }else{
+                    // stores false if image is not selected
+                    isGroupImageSelected = false;
+                }
+
+            }
         }
+
     }
 
     private void deleteGroup(String groupImages){
+        // delete group chatImages.
+        FirebaseStorage firebaseStorage1 = FirebaseStorage.getInstance();
+        StorageReference storageGroupRef = firebaseStorage1.getReference().child(groupKey);
+        storageGroupRef.delete().addOnSuccessListener(unused1 -> {
+            Toast.makeText(this, "deletegroup", Toast.LENGTH_SHORT).show();
+
+        });
+
+
         // check if group has image before deleting group
         if (groupImages != null){
+            // delete group image first
             FirebaseStorage firebaseStorage = FirebaseStorage.getInstance();
             StorageReference storageReference = firebaseStorage.getReferenceFromUrl(groupImages);
             storageReference.delete().addOnSuccessListener(unused -> {
                 // File deleted successfully
                 // delete group
                 groupRef.child(groupKey).removeValue();
+                // delete group chat messages.
+                chatRef.child(groupKey).removeValue();
+
                 finish();
+            }).addOnFailureListener(e -> {
+                Toast.makeText(this, "Error: can't delete group", Toast.LENGTH_SHORT).show();
             });
         }else {
             // delete group
             groupRef.child(groupKey).removeValue();
+            // delete group chat messages.
+            chatRef.child(groupKey).removeValue();
             finish();
         }
-
 
     }
 
@@ -396,7 +523,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         // delete group image.
         imageViewDeleteGroupImage.setOnClickListener(v -> {
             imageViewGroupImage.setImageResource(R.drawable.ic_baseline_add_a_photo_24);
-            isImageSelected = false;
+            isGroupImageSelected = false;
             isPreviousImage = false;
         });
         // on click open image chooser
@@ -406,7 +533,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         // display selected image in image view
         generalChatViewModel.getUriLivedata().observe(this, uri -> {
             imageViewGroupImage.setImageURI(uri);
-            selectedImageUri = uri;
+            uriGroupImage = uri;
         });
 
         // proceed button
@@ -416,19 +543,20 @@ public class GeneralChatActivity extends AppCompatActivity {
             }else {
                 String info = autoCompleteTextViewInfo.getText().toString();
                 // check if user selects new image to upload
-                if (isImageSelected){
-                    // check if group has image before deleting group
+                if (isGroupImageSelected){
+                    // if group has previous image before updating, delete old image
                     if (groupImage != null){
-                        // delete initial group images if any
+                        // deletes initial(old) group images.
                         FirebaseStorage firebaseStorage = FirebaseStorage.getInstance();
                         StorageReference storageReference = firebaseStorage.getReferenceFromUrl(groupImage);
                         storageReference.delete().addOnSuccessListener(unused -> {
                             dialog.dismiss();
-                            updateGroupInfoWithImage(GeneralChatActivity.this, selectedImageUri, info);
+                            updateGroupInfoWithImage(GeneralChatActivity.this, uriGroupImage, info);
                         });
                     } else {
+                        // update new group image
                         dialog.dismiss();
-                        updateGroupInfoWithImage(GeneralChatActivity.this, selectedImageUri, info);
+                        updateGroupInfoWithImage(GeneralChatActivity.this, uriGroupImage, info);
                     }
 
                 }else{
@@ -465,7 +593,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         });
         // cancel button dismiss dialog
         buttonCancel.setOnClickListener(v -> dialog.dismiss());
-        isImageSelected = false;
+        isGroupImageSelected = false;
         // show dialog
         dialog.show();
 
@@ -475,8 +603,8 @@ public class GeneralChatActivity extends AppCompatActivity {
         // instance of progress dialog
         ProgressDialog progressBar = new ProgressDialog(context);
         // Create a reference to group profile pics
-        groupImageRef = storageRef.child("groupProfilePics/" + uri.getLastPathSegment());
-        uploadTask = groupImageRef.putFile(uri);
+        groupImageStorageRef = storageRef.child("groupProfilePics/" + uri.getLastPathSegment());
+        uploadTask = groupImageStorageRef.putFile(uri);
 
         uploadTask.addOnFailureListener(e -> {
             // update user on failure
@@ -494,7 +622,7 @@ public class GeneralChatActivity extends AppCompatActivity {
                 }
 
                 // Continue with the task to get the download URL
-                return groupImageRef.getDownloadUrl();
+                return groupImageStorageRef.getDownloadUrl();
             }).addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
                     // gets image download url

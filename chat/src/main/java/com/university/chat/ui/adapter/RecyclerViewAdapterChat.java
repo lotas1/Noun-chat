@@ -5,6 +5,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -12,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.auth.FirebaseAuth;
@@ -45,6 +47,7 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
     protected void onBindViewHolder(@NonNull ChatViewHolderSent holder, int position, @NonNull ChatModel model) {
         LinearLayout.LayoutParams cardViewParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         ViewGroup.MarginLayoutParams cardViewMarginParams = (ViewGroup.MarginLayoutParams) holder.linearParentLayoutSent.getLayoutParams();
+
         if (Objects.equals(model.getUserId(), user.getUid())){
             cardViewMarginParams.setMargins(100, 0, 0, 0);
             holder.linearParentLayoutSent.setGravity(Gravity.RIGHT);
@@ -53,6 +56,11 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
         }else{
             cardViewMarginParams.setMargins(0, 0, 100, 0);
             holder.linearParentLayoutSent.setGravity(Gravity.LEFT);
+        }
+
+        if (model.getImage() != null){
+            holder.cardViewImageFullDisplay.setVisibility(View.VISIBLE);
+            Glide.with(context).load(model.getImage()).into(holder.imageViewImageFullDisplay);
         }
 
         if (model.getUsername() != null) {
@@ -79,7 +87,8 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
     class ChatViewHolderSent extends RecyclerView.ViewHolder{
         private TextView textViewUsernameSent, textViewMessageSent, textViewDateSent;
         private LinearLayout linearParentLayoutSent;
-        private CardView cardView;
+        private CardView cardView, cardViewImageFullDisplay;
+        private ImageView imageViewImageFullDisplay;
 
         public ChatViewHolderSent(@NonNull View itemView) {
             super(itemView);
@@ -89,6 +98,8 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
             textViewDateSent = itemView.findViewById(R.id.textView_date_chat_sent);
             linearParentLayoutSent = itemView.findViewById(R.id.linear_parentLayout_chat_sent);
             cardView = itemView.findViewById(R.id.cardView_chat);
+            cardViewImageFullDisplay = itemView.findViewById(R.id.cardView_ImageFullDisplay_Chat);
+            imageViewImageFullDisplay = itemView.findViewById(R.id.imageView_ImageFullDisplay_Chat);
         }
     }
 }

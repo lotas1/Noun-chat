@@ -1,7 +1,7 @@
 package com.university.chat.data.model;
 
 public class ChatModel {
-    private String username, message, time, userId;
+    private String username, message, time, userId, image;
 
     public String getUsername() {
         return username;
@@ -33,5 +33,13 @@ public class ChatModel {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
     }
 }
