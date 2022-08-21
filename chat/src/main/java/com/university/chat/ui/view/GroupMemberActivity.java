@@ -40,6 +40,8 @@ public class GroupMemberActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_group_member);
 
+
+
         // instantiate view
         recyclerView = findViewById(R.id.recyclerView_group_members);
         toolbar = findViewById(R.id.toolbar_members);

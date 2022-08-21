@@ -46,6 +46,7 @@ import com.university.chat.R;
 import com.university.chat.data.model.ChatModel;
 import com.university.chat.ui.adapter.RecyclerViewAdapterChat;
 import com.university.chat.ui.viewModel.GeneralChatViewModel;
+import com.university.theme.ItemClickSupport;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -317,6 +318,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         LinearLayoutManager layoutManager = new LinearLayoutManager(context,LinearLayoutManager.VERTICAL, false);
         layoutManager.setStackFromEnd(true);
         recyclerViewChatData.setLayoutManager(layoutManager);
+        recyclerViewChatData.setHasFixedSize(true);
 
         // firebase location path
         queryChatMessages = FirebaseDatabase.getInstance().getReference(groupKey);
@@ -332,6 +334,13 @@ public class GeneralChatActivity extends AppCompatActivity {
         // Function to tell the app to start getting data from database
         recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
         recyclerViewAdapterChat.startListening();
+
+        ItemClickSupport.addTo(recyclerViewChatData).setOnItemLongClickListener(new ItemClickSupport.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClicked(RecyclerView recyclerView, int position, View v) {
+                return false;
+            }
+        });
     }
 
     private void init(Context context){
@@ -399,6 +408,8 @@ public class GeneralChatActivity extends AppCompatActivity {
                 }else{
                     // stores false if image is not selected
                     isChatImageSelected = false;
+                    isChatImageChooser = false;
+                    constraintLayoutImageFullDisplayParentLayout.setVisibility(View.GONE);
                 }
 
             }

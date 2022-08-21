@@ -45,9 +45,8 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
 
     @Override
     protected void onBindViewHolder(@NonNull ChatViewHolderSent holder, int position, @NonNull ChatModel model) {
-        LinearLayout.LayoutParams cardViewParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        ViewGroup.MarginLayoutParams cardViewMarginParams = (ViewGroup.MarginLayoutParams) holder.linearParentLayoutSent.getLayoutParams();
 
+        ViewGroup.MarginLayoutParams cardViewMarginParams = (ViewGroup.MarginLayoutParams) holder.linearParentLayoutSent.getLayoutParams();
         if (Objects.equals(model.getUserId(), user.getUid())){
             cardViewMarginParams.setMargins(100, 0, 0, 0);
             holder.linearParentLayoutSent.setGravity(Gravity.RIGHT);
@@ -56,11 +55,15 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
         }else{
             cardViewMarginParams.setMargins(0, 0, 100, 0);
             holder.linearParentLayoutSent.setGravity(Gravity.LEFT);
+            holder.cardView.setCardBackgroundColor(context.getResources().getColor(com.university.theme.R.color.white));
+            holder.textViewUsernameSent.setVisibility(View.VISIBLE);
         }
 
         if (model.getImage() != null){
             holder.cardViewImageFullDisplay.setVisibility(View.VISIBLE);
             Glide.with(context).load(model.getImage()).into(holder.imageViewImageFullDisplay);
+        }else{
+            holder.cardViewImageFullDisplay.setVisibility(View.GONE);
         }
 
         if (model.getUsername() != null) {
@@ -81,7 +84,7 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
     public ChatViewHolderSent onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
 
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.sent_chat_list_item, parent, false);
-        return new ChatViewHolderSent(view);
+        return new RecyclerViewAdapterChat.ChatViewHolderSent(view);
     }
 
     class ChatViewHolderSent extends RecyclerView.ViewHolder{

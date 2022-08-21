@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.FirebaseDatabase;
 import com.university.chat.R;
 import com.university.chat.ui.view.UserGroupsActivity;
 
@@ -16,11 +17,20 @@ public class SignUpIntroActivity extends AppCompatActivity {
     private Button buttonGetStarted;
     private TextView textViewLogin;
     private FirebaseAuth mAuth;
+    static Boolean calledAlready = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up_intro);
+
+        // Create a instance of the database and get
+        // its reference
+        // called already prevents crash in setPersistenceEnabled
+        //if (!calledAlready){
+        //    FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        //    calledAlready = true;
+        //}
 
         // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();

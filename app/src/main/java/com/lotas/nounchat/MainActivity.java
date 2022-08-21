@@ -11,10 +11,14 @@ import com.university.chat.ui.view.authentication.SignUpIntroActivity;
 
 public class MainActivity extends AppCompatActivity {
     private Button buttonUser, buttonAdmin;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
 
         // code begins
         // open user module
