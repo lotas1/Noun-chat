@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -56,9 +57,9 @@ import java.util.Map;
 public class GeneralChatActivity extends AppCompatActivity {
     private Toolbar toolbar;
     private LinearLayout linearLayoutUser, linearLayoutAdmin;
-    private TextView textViewMessage, textViewGroupInfoMessage;
-    private ImageView imageViewGroupInfoEdit, imageViewDeleteGroupImage, imageViewGroupImage, imageViewSendUserData, imageViewChatImageChooser, imageViewFullDisplay, imageViewDeleteChatImage;
-    private LinearLayout linearEditLayoutGroupInfo;
+    private TextView textViewMessage, textViewGroupInfoMessage, textViewUsernameReply, textViewMessageReply;
+    private ImageView imageViewGroupInfoEdit, imageViewDeleteGroupImage, imageViewGroupImage, imageViewSendUserData, imageViewChatImageChooser, imageViewFullDisplay, imageViewDeleteChatImage, imageViewCloseReplyChat;
+    private LinearLayout linearEditLayoutGroupInfo, linearLayoutReplyMessageGeneralChat;
     private ConstraintLayout constraintLayoutImageFullDisplayParentLayout;
     private AutoCompleteTextView autoCompleteTextViewInfo;
     private TextInputLayout textInputLayoutInfo;
@@ -116,6 +117,10 @@ public class GeneralChatActivity extends AppCompatActivity {
         imageViewFullDisplay = findViewById(R.id.imageView_viewSelectedImage_generalChat);
         constraintLayoutImageFullDisplayParentLayout = findViewById(R.id.constrainLayout_imageViewDisplay_parentLayout);
         imageViewDeleteChatImage = findViewById(R.id.imageView_delete_Message_generalChat);
+        linearLayoutReplyMessageGeneralChat = findViewById(R.id.linearLayout_replyMessage_generalChat);
+        imageViewCloseReplyChat = findViewById(R.id.imageView_CloseReply_generalChat);
+        textViewUsernameReply = findViewById(R.id.textView_usernameReply_generalChat);
+        textViewMessageReply = findViewById(R.id.textView_messageReply_generalChat);
 
         // instance of bundle
         Bundle b = getIntent().getExtras();
@@ -189,8 +194,30 @@ public class GeneralChatActivity extends AppCompatActivity {
             return false;
         });
 
+        // prevent user from sending images in chat
+        if (!isUserAdmin){
+            imageViewChatImageChooser.setVisibility(View.GONE);
+        }
+
         // init onCreate
         init(GeneralChatActivity.this);
+
+        /** close reply chat if not needed again by the user**/
+        imageViewCloseReplyChat.setOnClickListener(v -> linearLayoutReplyMessageGeneralChat.setVisibility(View.GONE));
+
+        // observer for reply message in chat
+        generalChatViewModel.getUserReplyInfo().observe(this, new Observer<Map<String, String>>() {
+            @Override
+            public void onChanged(Map<String, String> map) {
+                String username, message;
+                username = map.get("username");
+                message = map.get("message");
+                // set reply layout visibility VISIBLE
+                linearLayoutReplyMessageGeneralChat.setVisibility(View.VISIBLE);
+                textViewUsernameReply.setText(username);
+                textViewMessageReply.setText(message);
+            }
+        });
 
 
         // on click for choosing image to send along user message
@@ -329,22 +356,28 @@ public class GeneralChatActivity extends AppCompatActivity {
                 .build();
         // Connecting object of required Adapter class to
         // the Adapter class itself
-        recyclerViewAdapterChat = new RecyclerViewAdapterChat(options, GeneralChatActivity.this);
+        recyclerViewAdapterChat = new RecyclerViewAdapterChat(options, GeneralChatActivity.this){
+            @Override
+            public void onDataChanged() {
+                super.onDataChanged();
+                // Connecting Adapter class with the Recycler view
+                // Function to tell the app to start getting data from database
+                // refreshes adapter for new messages.
+                recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
+                recyclerViewAdapterChat.startListening();
+            }
+        };
         // Connecting Adapter class with the Recycler view
         // Function to tell the app to start getting data from database
         recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
         recyclerViewAdapterChat.startListening();
 
-        ItemClickSupport.addTo(recyclerViewChatData).setOnItemLongClickListener(new ItemClickSupport.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClicked(RecyclerView recyclerView, int position, View v) {
-                return false;
-            }
-        });
     }
 
     private void init(Context context){
-
+        // set reply layout visibility gone by default
+        linearLayoutReplyMessageGeneralChat.setVisibility(View.GONE);
+        // for recycler view updating user chat.
         chatRecyclerView(context);
         groupRef.child(groupKey).child(getStringResource(R.string.adminOnly)).addValueEventListener(new ValueEventListener() {
             @Override

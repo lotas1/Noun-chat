@@ -11,6 +11,8 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.lifecycle.ViewModelStoreOwner;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -20,12 +22,14 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.university.chat.R;
 import com.university.chat.data.model.ChatModel;
+import com.university.chat.ui.viewModel.GeneralChatViewModel;
 
 import java.util.Objects;
 
 public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, RecyclerViewAdapterChat.ChatViewHolderSent> {
     private Context context;
     private FirebaseUser user;
+    private GeneralChatViewModel generalChatViewModel;
     private static final int VIEW_TYPE_MESSAGE_SENT = 1;
     private static final int VIEW_TYPE_MESSAGE_RECEIVED = 2;
 
@@ -41,6 +45,8 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
         this.context = context;
         // get current user details
         user = FirebaseAuth.getInstance().getCurrentUser();
+        // instantiate view model
+        generalChatViewModel = new ViewModelProvider((ViewModelStoreOwner) context).get(GeneralChatViewModel.class);
     }
 
     @Override
@@ -77,6 +83,14 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
         if (model.getTime() != null) {
             holder.textViewDateSent.setText(model.getTime());
         }
+
+        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                generalChatViewModel.setUserReplyInfo(model.getUsername(), model.getMessage());
+                return false;
+            }
+        });
     }
 
     @NonNull
