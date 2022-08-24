@@ -25,6 +25,11 @@
     <string name="image">image</string>
 
 
+    <string name="replyMessage">replyMessage</string>
+    <string name="replyUsername">replyUsername</string>
+    <string name="replyPosition">replyPosition</string>
+
+
 
 
 </resources>

@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
     android:gravity="center_vertical"
-    android:padding="10dp"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:padding="10dp">
 
     <androidx.cardview.widget.CardView
         android:id="@+id/cardView2"
@@ -21,7 +23,7 @@
             android:id="@+id/imageView_group_profile_pics"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:src="@drawable/noun_icon"/>
+            android:src="@drawable/noun_icon" />
     </androidx.cardview.widget.CardView>
 
     <LinearLayout
@@ -29,6 +31,7 @@
         android:layout_height="match_parent"
         android:layout_marginLeft="10dp"
         android:orientation="vertical">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -40,12 +43,12 @@
                 android:id="@+id/textView_group_name"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Noun General Group"
                 android:layout_weight="1"
-                android:textColor="@color/black"
                 android:paddingEnd="5dp"
-                android:textSize="16dp"
                 android:singleLine="true"
+                android:text="Noun General Group"
+                android:textColor="@color/black"
+                android:textSize="16dp"
                 android:textStyle="bold"
                 app:layout_constraintStart_toEndOf="@+id/cardView2"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -62,6 +65,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/textView4" />
         </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -72,11 +76,11 @@
                 android:id="@+id/textView_group_last_message"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="Noun General Group"
                 android:layout_weight="1"
                 android:paddingEnd="5dp"
-                android:textSize="14dp"
                 android:singleLine="true"
+                android:text="Noun General Group"
+                android:textSize="14dp"
                 app:layout_constraintStart_toEndOf="@+id/cardView2"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -84,8 +88,6 @@
         </LinearLayout>
 
     </LinearLayout>
-
-
 
 
 </LinearLayout>

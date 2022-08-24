@@ -3,6 +3,7 @@ package com.university.chat.ui.view;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.ActionMode;
 import androidx.appcompat.widget.Toolbar;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.lifecycle.Observer;
@@ -17,6 +18,9 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.TypedValue;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
@@ -29,7 +33,7 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
-import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
@@ -47,7 +51,6 @@ import com.university.chat.R;
 import com.university.chat.data.model.ChatModel;
 import com.university.chat.ui.adapter.RecyclerViewAdapterChat;
 import com.university.chat.ui.viewModel.GeneralChatViewModel;
-import com.university.theme.ItemClickSupport;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -73,16 +76,21 @@ public class GeneralChatActivity extends AppCompatActivity {
     private FirebaseDatabase database;
     private DatabaseReference groupRef, userRef, chatRef;
     boolean  isUserBan, isUserAdmin;
-    private String groupName, groupKey, groupImage, username;
+    private String groupName, groupKey, groupImage, username, replyUsername, replyMessage, messageKey, textToCopy;
+
     int usersCount;
     private boolean isGroupMute;
     private static final int PICK_IMAGE = 100;
-    private boolean isGroupImageSelected, isChatImageSelected, isPreviousImage = false, isChatImageChooser = false;
+    private boolean isGroupImageSelected, isChatImageSelected, isPreviousImage = false, isChatImageChooser = false, isReplyChatSelected = false;
     private Uri uriGroupImage, uriChatImage;
     private GeneralChatViewModel generalChatViewModel;
     private StorageReference storageRef, groupImageStorageRef, chatImageStorageRef;
     private FirebaseStorage storage;
     private UploadTask uploadTask;
+    private int replyPosition;
+    private ActionMode actionMode;
+    private Map<String, Object> replyMap;
+    private int highlightedPosition = -10;
 
 
     @Override
@@ -203,19 +211,26 @@ public class GeneralChatActivity extends AppCompatActivity {
         init(GeneralChatActivity.this);
 
         /** close reply chat if not needed again by the user**/
-        imageViewCloseReplyChat.setOnClickListener(v -> linearLayoutReplyMessageGeneralChat.setVisibility(View.GONE));
+        imageViewCloseReplyChat.setOnClickListener(v -> {
+            isReplyChatSelected = false;
+            linearLayoutReplyMessageGeneralChat.setVisibility(View.GONE);
+        });
 
         // observer for reply message in chat
-        generalChatViewModel.getUserReplyInfo().observe(this, new Observer<Map<String, String>>() {
+        generalChatViewModel.getUserReplyInfo().observe(this, new Observer<Map<String, Object>>() {
             @Override
-            public void onChanged(Map<String, String> map) {
-                String username, message;
-                username = map.get("username");
-                message = map.get("message");
-                // set reply layout visibility VISIBLE
-                linearLayoutReplyMessageGeneralChat.setVisibility(View.VISIBLE);
-                textViewUsernameReply.setText(username);
-                textViewMessageReply.setText(message);
+            public void onChanged(Map<String, Object> map) {
+                replyMap = map;
+                actionMode = startSupportActionMode(actionModeCallback);
+            }
+        });
+
+        // observer for getting replied message position
+        generalChatViewModel.getReplyPositionLiveData().observe(this, new Observer<Integer>() {
+            @Override
+            public void onChanged(Integer replyPosition) {
+                // scroll to the reply message position.
+                recyclerViewChatData.smoothScrollToPosition(replyPosition);
             }
         });
 
@@ -250,12 +265,118 @@ public class GeneralChatActivity extends AppCompatActivity {
         });
     }
 
+    // contextual toolbar
+    private ActionMode.Callback actionModeCallback = new ActionMode.Callback() {
+
+        // Called when the action mode is created; startActionMode() was called
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            // Inflate a menu resource providing context menu items
+            MenuInflater inflater = mode.getMenuInflater();
+            inflater.inflate(R.menu.contextual_action_bar_chat, menu);
+            return true;
+        }
+
+        // Called each time the action mode is shown. Always called after onCreateActionMode, but
+        // may be called multiple times if the mode is invalidated.
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            return false; // Return false if nothing is done
+        }
+
+        // Called when the user selects a contextual menu item
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            if (item.getItemId() == R.id.reply) {
+                // updates ui with the selected reply message
+                selectedReplyMessage(replyMap);
+                // reset highlighted position to remove highlight from row.
+                highlightedPosition = -10;
+                recyclerViewAdapterChat.notifyDataSetChanged();
+                mode.finish(); // Action picked, so close the CAB
+                return true;
+            } else if (item.getItemId() == R.id.delete) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(GeneralChatActivity.this);
+                builder.setTitle("Delete message")
+                        .setMessage("Are you sure you want to delete this message for everyone?")
+                        .setNegativeButton("cancel", (dialog, which) -> {
+
+                        })
+                        .setPositiveButton("Delete", (dialog, which) -> {
+                            // deletes selected message
+                            deleteSelectedMessage();
+
+                            // reset highlighted position to remove highlight from row.
+                            highlightedPosition = -10;
+                            recyclerViewAdapterChat.notifyDataSetChanged();
+                            mode.finish(); // Action picked, so close the CAB
+
+                        });
+                AlertDialog dialog = builder.create();
+                dialog.show();
+                return true;
+            } else if (item.getItemId() == R.id.copy) {
+                setClipboard(GeneralChatActivity.this, textToCopy);
+                Toast.makeText(GeneralChatActivity.this, "Message copied", Toast.LENGTH_SHORT).show();
+                // reset highlighted position to remove highlight from row.
+                highlightedPosition = -10;
+                recyclerViewAdapterChat.notifyDataSetChanged();
+                mode.finish(); // Action picked, so close the CAB
+                return true;
+            }
+            return false;
+        }
+
+        // Called when the user exits the action mode
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+            // reset highlighted position to remove highlight from row (on close of contextual action bar).
+            highlightedPosition = -10;
+            recyclerViewAdapterChat.notifyDataSetChanged();
+            actionMode = null;
+
+        }
+    };
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
         recyclerViewAdapterChat.stopListening();
     }
 
+    private void selectedReplyMessage(Map<String, Object> map){
+        isReplyChatSelected = true;
+        replyUsername = (String) map.get("replyUsername");
+        replyMessage = (String) map.get("replyMessage");
+        replyPosition = (int) map.get("replyPosition");
+        // set reply layout visibility VISIBLE
+        linearLayoutReplyMessageGeneralChat.setVisibility(View.VISIBLE);
+        textViewUsernameReply.setText(replyUsername);
+        textViewMessageReply.setText(replyMessage);
+    }
+
+    private void deleteSelectedMessage(){
+        // create instance of firebase database & database reference.
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        // reference for News/NounUpdate path.
+        DatabaseReference myRef = database.getReference(groupKey);
+
+        // path to selected message key
+        Query query = myRef.child(messageKey);
+
+        query.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                // remove the value at reference
+                dataSnapshot.getRef().removeValue();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
     private void sendMessageWithImage(Context context, Uri uri){
         // instance of progress dialog
         ProgressDialog progressBar = new ProgressDialog(context);
@@ -295,9 +416,21 @@ public class GeneralChatActivity extends AppCompatActivity {
                     map.put(getStringResource(R.string.message), message);
                     map.put(getStringResource(R.string.time), getDate());
                     map.put(getStringResource(R.string.userId), uid);
+                    map.put(getStringResource(R.string.key), key);
                     map.put(getStringResource(R.string.image), downloadUri.toString());
+                    if (isReplyChatSelected) {
+                        map.put(getStringResource(R.string.replyUsername), replyUsername);
+                        map.put(getStringResource(R.string.replyMessage), replyMessage);
+                        map.put(getStringResource(R.string.replyPosition), replyPosition);
+                    }
                     assert key != null;
-                    chatRef.child(groupKey).child(key).setValue(map);
+                    chatRef.child(groupKey).child(key).setValue(map).addOnSuccessListener(unused -> {
+                        // Connecting Adapter class with the Recycler view
+                        // Function to tell the app to start getting data from database
+                        // refreshes adapter for new messages.
+                        recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
+                        recyclerViewAdapterChat.startListening();
+                    });
                     map.clear();
                     // update last message sender.
                     groupRef.child(groupKey).child(getStringResource(R.string.sender)).setValue(username);
@@ -308,6 +441,11 @@ public class GeneralChatActivity extends AppCompatActivity {
                     constraintLayoutImageFullDisplayParentLayout.setVisibility(View.GONE);
                     isChatImageChooser = false;
                     isChatImageSelected = false;
+                    linearLayoutReplyMessageGeneralChat.setVisibility(View.GONE);
+                    isReplyChatSelected = false;
+                    replyUsername = null;
+                    replyMessage = null;
+                    replyPosition = 0;
                     // dismiss progress bar
                     progressBar.dismiss();
 
@@ -330,14 +468,32 @@ public class GeneralChatActivity extends AppCompatActivity {
         map.put(getStringResource(R.string.message), message);
         map.put(getStringResource(R.string.time), getDate());
         map.put(getStringResource(R.string.userId), uid);
+        map.put(getStringResource(R.string.key), key);
+        if (isReplyChatSelected) {
+            map.put(getStringResource(R.string.replyUsername), replyUsername);
+            map.put(getStringResource(R.string.replyMessage), replyMessage);
+            map.put(getStringResource(R.string.replyPosition), replyPosition);
+        }
         assert key != null;
-        chatRef.child(groupKey).child(key).setValue(map);
+        chatRef.child(groupKey).child(key).setValue(map)
+                .addOnSuccessListener(unused -> {
+                    // Connecting Adapter class with the Recycler view
+                    // Function to tell the app to start getting data from database
+                    // refreshes adapter for new messages.
+                    recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
+                    recyclerViewAdapterChat.startListening();
+                });
         map.clear();
-        // update last message sender.
+        // update last message sender for ui update of group list.
         groupRef.child(groupKey).child(getStringResource(R.string.sender)).setValue(username);
         groupRef.child(groupKey).child(getStringResource(R.string.lastMessage)).setValue(message);
         // clear view.
         editTextUserMessage.setText(null);
+        linearLayoutReplyMessageGeneralChat.setVisibility(View.GONE);
+        isReplyChatSelected = false;
+        replyUsername = null;
+        replyMessage = null;
+        replyPosition = 0;
     }
 
     private void chatRecyclerView(Context context){
@@ -345,7 +501,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         LinearLayoutManager layoutManager = new LinearLayoutManager(context,LinearLayoutManager.VERTICAL, false);
         layoutManager.setStackFromEnd(true);
         recyclerViewChatData.setLayoutManager(layoutManager);
-        recyclerViewChatData.setHasFixedSize(true);
+        // TODO recyclerViewChatData.setHasFixedSize(true);
 
         // firebase location path
         queryChatMessages = FirebaseDatabase.getInstance().getReference(groupKey);
@@ -357,20 +513,77 @@ public class GeneralChatActivity extends AppCompatActivity {
         // Connecting object of required Adapter class to
         // the Adapter class itself
         recyclerViewAdapterChat = new RecyclerViewAdapterChat(options, GeneralChatActivity.this){
+
+            @Override
+            protected void onBindViewHolder(@NonNull ChatViewHolderSent holder, int position, @NonNull ChatModel model) {
+                super.onBindViewHolder(holder, position, model);
+                // on click
+                holder.itemView.setOnClickListener(v -> {
+                    // remove highlighted area on click.
+                    if (highlightedPosition >= 0) {
+                        // close contextual action bar
+                        actionMode.finish();
+                        highlightedPosition = -10;
+                        notifyDataSetChanged();
+                    }
+
+                });
+                // on long click on item view.
+                holder.itemView.setOnLongClickListener(v -> {
+
+                    // remove any previous contextual action bar created for highlighted position.
+                    if (highlightedPosition >= 0) {
+                        // close contextual action bar
+                        actionMode.finish();
+                    }
+
+                    // gets position selected by user to highlight
+                    highlightedPosition = holder.getLayoutPosition();
+                    // get selected message push key for deleting message purpose
+                    messageKey = model.getKey();
+                    // get message text for copy
+                    textToCopy = model.getMessage();
+                    // get user message info a user wants to reply to.
+                    generalChatViewModel.setUserReplyInfo(model.getUsername(), model.getMessage(), holder.getLayoutPosition());
+                    notifyDataSetChanged();
+                    return false;
+                });
+
+                // checks for position selected for highlight and highlight it.
+                if (highlightedPosition == position) {
+                    // disable reply parent layout from clicking
+                    holder.cardViewReplyInfo.setClickable(false);
+                    // set highlighted row background to grey
+                    holder.itemView.setBackgroundColor(context.getResources().getColor(com.university.theme.R.color.dark_grey));
+                }else {
+                    // set highlighted row background to selectableItemBackground
+                    TypedValue outValue = new TypedValue();
+                    context.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, true);
+                    holder.itemView.setBackgroundResource(outValue.resourceId);
+
+                    // if position highlighted, first click on parent reply layout disables it from being clickable.
+                    if (highlightedPosition >= 0) {
+                        // disable reply parent layout from clicking
+                        holder.cardViewReplyInfo.setClickable(false);
+                    }
+                }
+            }
+
             @Override
             public void onDataChanged() {
                 super.onDataChanged();
-                // Connecting Adapter class with the Recycler view
-                // Function to tell the app to start getting data from database
-                // refreshes adapter for new messages.
-                recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
-                recyclerViewAdapterChat.startListening();
+
+                //recyclerViewChatData.scrollToPosition(10);
             }
+
+
+
         };
         // Connecting Adapter class with the Recycler view
         // Function to tell the app to start getting data from database
         recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
         recyclerViewAdapterChat.startListening();
+
 
     }
 
@@ -455,7 +668,7 @@ public class GeneralChatActivity extends AppCompatActivity {
                     isGroupImageSelected = true;
                     // Get the url of the image from data
                     // set uri to view model
-                    generalChatViewModel.setMutableLiveDataUri(data.getData());
+                    generalChatViewModel.setMutableLiveDataGroupImageUri(data.getData());
 
                 }else{
                     // stores false if image is not selected
@@ -575,7 +788,7 @@ public class GeneralChatActivity extends AppCompatActivity {
             imageChooser();
         });
         // display selected image in image view
-        generalChatViewModel.getUriLivedata().observe(this, uri -> {
+        generalChatViewModel.getGroupImageUriLivedata().observe(this, uri -> {
             imageViewGroupImage.setImageURI(uri);
             uriGroupImage = uri;
         });
@@ -763,6 +976,17 @@ public class GeneralChatActivity extends AppCompatActivity {
     // returns string from resources
     private String getStringResource(int string){
         return getResources().getString(string);
+    }
+
+    private void setClipboard(Context context, String text) {
+        if(android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.HONEYCOMB) {
+            android.text.ClipboardManager clipboard = (android.text.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+            clipboard.setText(text);
+        } else {
+            android.content.ClipboardManager clipboard = (android.content.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+            android.content.ClipData clip = android.content.ClipData.newPlainText("Copied Text", text);
+            clipboard.setPrimaryClip(clip);
+        }
     }
 
     // clears textInput layout error

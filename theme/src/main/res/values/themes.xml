@@ -27,6 +27,11 @@
         <!-- outline button theme-->
         <item name="materialButtonOutlinedStyle">@style/Widget.App.Button.OutlinedButton</item>
 
+        <item name="windowActionModeOverlay">true</item>
+        <item name="actionModeStyle">@style/Widget.App.ActionMode</item>
+        <item name="actionModeCloseDrawable">@drawable/ic_baseline_close_24</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.MaterialComponents.Dark.ActionBar</item>
+
     </style>
 
 
@@ -46,6 +51,12 @@
     <!-- extends ThemeOverlay and override colorControlNormal -->
     <style name="ThemeOverlay.App.Toolbar" parent="ThemeOverlay.MaterialComponents.Toolbar.Primary">
         <item name="colorControlNormal">@color/white</item>
+    </style>
+    <!-- for contextual action bar -->
+    <style name="Widget.App.ActionMode" parent="Widget.AppCompat.ActionMode">
+        <item name="titleTextStyle">?attr/textAppearanceHeadline6</item>
+        <item name="subtitleTextStyle">?attr/textAppearanceSubtitle1</item>
+        <item name="background">@color/material_grey_900</item>
     </style>
 
     <!-- Customize menu dropdown theme. -->

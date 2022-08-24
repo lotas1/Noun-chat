@@ -1,6 +1,7 @@
 package com.university.chat.ui.adapter;
 
 import android.content.Context;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -34,6 +35,7 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
     private static final int VIEW_TYPE_MESSAGE_RECEIVED = 2;
 
 
+
     /**
      * Initialize a {@link RecyclerView.Adapter} that listens to a Firebase query. See
      * {@link FirebaseRecyclerOptions} for configuration options.
@@ -54,12 +56,12 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
 
         ViewGroup.MarginLayoutParams cardViewMarginParams = (ViewGroup.MarginLayoutParams) holder.linearParentLayoutSent.getLayoutParams();
         if (Objects.equals(model.getUserId(), user.getUid())){
-            cardViewMarginParams.setMargins(100, 0, 0, 0);
+            //cardViewMarginParams.setMargins(100, 0, 0, 0);
             holder.linearParentLayoutSent.setGravity(Gravity.RIGHT);
-            holder.cardView.setCardBackgroundColor(context.getResources().getColor(com.university.theme.R.color.Beige));
+            holder.cardView.setCardBackgroundColor(context.getResources().getColor(com.university.theme.R.color.Tea_Green));
             holder.textViewUsernameSent.setVisibility(View.GONE);
         }else{
-            cardViewMarginParams.setMargins(0, 0, 100, 0);
+            //cardViewMarginParams.setMargins(0, 0, 100, 0);
             holder.linearParentLayoutSent.setGravity(Gravity.LEFT);
             holder.cardView.setCardBackgroundColor(context.getResources().getColor(com.university.theme.R.color.white));
             holder.textViewUsernameSent.setVisibility(View.VISIBLE);
@@ -84,13 +86,24 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
             holder.textViewDateSent.setText(model.getTime());
         }
 
-        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                generalChatViewModel.setUserReplyInfo(model.getUsername(), model.getMessage());
-                return false;
-            }
-        });
+        if (model.getReplyMessage() != null) {
+            holder.cardViewReplyInfo.setVisibility(View.VISIBLE);
+            holder.textViewUsernameReply.setText(model.getReplyUsername());
+            holder.textViewMessageReply.setText(model.getReplyMessage());
+            // on click on user reply it scrolls to reply message position
+            holder.cardViewReplyInfo.setOnClickListener(v -> {
+                // get reply message position
+                generalChatViewModel.setReplyPosition(model.getReplyPosition());
+            });
+        }else {
+            holder.cardViewReplyInfo.setVisibility(View.GONE);
+        }
+
+
+
+
+
+
     }
 
     @NonNull
@@ -101,10 +114,10 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
         return new RecyclerViewAdapterChat.ChatViewHolderSent(view);
     }
 
-    class ChatViewHolderSent extends RecyclerView.ViewHolder{
-        private TextView textViewUsernameSent, textViewMessageSent, textViewDateSent;
+    public static class ChatViewHolderSent extends RecyclerView.ViewHolder{
+        private TextView textViewUsernameSent, textViewMessageSent, textViewDateSent, textViewUsernameReply, textViewMessageReply;
         private LinearLayout linearParentLayoutSent;
-        private CardView cardView, cardViewImageFullDisplay;
+        public CardView cardView, cardViewImageFullDisplay, cardViewReplyInfo;
         private ImageView imageViewImageFullDisplay;
 
         public ChatViewHolderSent(@NonNull View itemView) {
@@ -117,6 +130,11 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
             cardView = itemView.findViewById(R.id.cardView_chat);
             cardViewImageFullDisplay = itemView.findViewById(R.id.cardView_ImageFullDisplay_Chat);
             imageViewImageFullDisplay = itemView.findViewById(R.id.imageView_ImageFullDisplay_Chat);
+            cardViewReplyInfo = itemView.findViewById(R.id.cardView_replyInfo_chat);
+            textViewUsernameReply = itemView.findViewById(R.id.textView_usernameReply_chat);
+            textViewMessageReply = itemView.findViewById(R.id.textView_messageReply_chat);
+
+            itemView.setClickable(true);
         }
     }
 }
