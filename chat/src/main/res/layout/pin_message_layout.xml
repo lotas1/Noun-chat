@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/linearLayout_PinMessageParentLayout_generalChat"
+    android:layout_width="match_parent"
+    android:layout_height="45dp"
+    android:background="@color/ash"
+    android:orientation="horizontal"
+    android:visibility="gone"
+    android:gravity="center_vertical">
+
+
+    <View
+        android:layout_width="5dp"
+        android:layout_height="match_parent"
+        android:background="@color/black"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_vertical"
+        android:layout_weight="1"
+        android:layout_marginStart="5dp"
+        android:padding="2dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:textSize="15dp"
+            android:text="Pinned Message"
+            android:textStyle="bold"
+            android:textColor="@color/secondaryColor"/>
+
+        <TextView
+            android:id="@+id/textView_PinMessage_generalChat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:textSize="14dp"
+            android:text="pin message"
+            android:textColor="@color/black"/>
+
+    </LinearLayout>
+    <ImageView
+        android:id="@+id/imageView_ClosePinMessage_generalChat"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:layout_gravity="bottom"
+        android:src="@drawable/ic_outline_close_24"
+        android:scaleType="centerInside"/>
+
+
+</LinearLayout>

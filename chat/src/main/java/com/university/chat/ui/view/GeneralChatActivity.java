@@ -15,6 +15,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -24,16 +25,14 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AutoCompleteTextView;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
@@ -56,17 +55,16 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class GeneralChatActivity extends AppCompatActivity {
     private Toolbar toolbar;
     private LinearLayout linearLayoutUser, linearLayoutAdmin;
-    private TextView textViewMessage, textViewGroupInfoMessage, textViewUsernameReply, textViewMessageReply;
-    private ImageView imageViewGroupInfoEdit, imageViewDeleteGroupImage, imageViewGroupImage, imageViewSendUserData, imageViewChatImageChooser, imageViewFullDisplay, imageViewDeleteChatImage, imageViewCloseReplyChat;
-    private LinearLayout linearEditLayoutGroupInfo, linearLayoutReplyMessageGeneralChat;
+    private TextView textViewMessage, textViewGroupInfoMessage, textViewUsernameReply, textViewMessageReply, textViewGroupName, textViewPinMessage;
+    private ImageView imageViewGroupInfoEdit, imageViewFullDisplay, imageViewDeletePinMessage;
+    private ImageButton imageButtonCloseReplyChat, imageButtonSendUserData, imageButtonChatImageChooser, imageButtonDeleteChatImage, imageButtonScrollDown;
+    private LinearLayout linearLayoutReplyMessageGeneralChat, linearLayoutPinMessageParentLayout;
     private ConstraintLayout constraintLayoutImageFullDisplayParentLayout;
-    private AutoCompleteTextView autoCompleteTextViewInfo;
-    private TextInputLayout textInputLayoutInfo;
-    private Button buttonCancel, buttonProceed;
     private EditText editTextUserMessage;
     private RecyclerView recyclerViewChatData;
     private RecyclerViewAdapterChat recyclerViewAdapterChat;
@@ -75,22 +73,25 @@ public class GeneralChatActivity extends AppCompatActivity {
     private FirebaseUser user;
     private FirebaseDatabase database;
     private DatabaseReference groupRef, userRef, chatRef;
-    boolean  isUserBan, isUserAdmin;
-    private String groupName, groupKey, groupImage, username, replyUsername, replyMessage, messageKey, textToCopy;
+    boolean isUserBan, isUserAdmin;
+    private String groupName, groupKey, groupImage, username, replyUsername, replyMessage, messageKey, textToCopy, messageUserId, chatImage, highlightedMessage;
 
     int usersCount;
     private boolean isGroupMute;
     private static final int PICK_IMAGE = 100;
-    private boolean isGroupImageSelected, isChatImageSelected, isPreviousImage = false, isChatImageChooser = false, isReplyChatSelected = false;
-    private Uri uriGroupImage, uriChatImage;
+    private boolean isChatImageSelected, isReplyChatSelected = false;
+    private Uri uriChatImage;
     private GeneralChatViewModel generalChatViewModel;
-    private StorageReference storageRef, groupImageStorageRef, chatImageStorageRef;
+    private StorageReference storageRef, chatImageStorageRef;
     private FirebaseStorage storage;
     private UploadTask uploadTask;
-    private int replyPosition;
+    private int replyPosition;//, pinMessagePosition = 0;
+    private String pinMessagePosition;
     private ActionMode actionMode;
     private Map<String, Object> replyMap;
     private int highlightedPosition = -10;
+    private SharedPreferences sharedPref;
+    private SharedPreferences.Editor editor;
 
 
     @Override
@@ -112,6 +113,9 @@ public class GeneralChatActivity extends AppCompatActivity {
         // instantiate view model
         generalChatViewModel = new ViewModelProvider(this).get(GeneralChatViewModel.class);
 
+        sharedPref = GeneralChatActivity.this.getPreferences(Context.MODE_PRIVATE);
+        editor = sharedPref.edit();
+
         // instantiate views
         toolbar = findViewById(R.id.toolbar_general_chat);
         linearLayoutUser = findViewById(R.id.linearLayout_user_generalChat);
@@ -119,16 +123,20 @@ public class GeneralChatActivity extends AppCompatActivity {
         textViewMessage = findViewById(R.id.textView_message_generalChat);
         item1 = toolbar.getMenu().findItem(R.id.muteGroup);
         editTextUserMessage = findViewById(R.id.edittext_inputMessage_generalChat);
-        imageViewSendUserData = findViewById(R.id.imageView_sendMessage_generalChat);
+        imageButtonSendUserData = findViewById(R.id.imageButton_sendMessage_generalChat);
         recyclerViewChatData = findViewById(R.id.recyclerView_generalChat);
-        imageViewChatImageChooser = findViewById(R.id.imageView_imageChooser_generalChat);
+        imageButtonChatImageChooser = findViewById(R.id.imageButton_imageChooser_generalChat);
         imageViewFullDisplay = findViewById(R.id.imageView_viewSelectedImage_generalChat);
         constraintLayoutImageFullDisplayParentLayout = findViewById(R.id.constrainLayout_imageViewDisplay_parentLayout);
-        imageViewDeleteChatImage = findViewById(R.id.imageView_delete_Message_generalChat);
+        imageButtonDeleteChatImage = findViewById(R.id.imageButton_delete_Message_generalChat);
         linearLayoutReplyMessageGeneralChat = findViewById(R.id.linearLayout_replyMessage_generalChat);
-        imageViewCloseReplyChat = findViewById(R.id.imageView_CloseReply_generalChat);
+        imageButtonCloseReplyChat = findViewById(R.id.imageButton_CloseReply_generalChat);
         textViewUsernameReply = findViewById(R.id.textView_usernameReply_generalChat);
         textViewMessageReply = findViewById(R.id.textView_messageReply_generalChat);
+        linearLayoutPinMessageParentLayout = findViewById(R.id.linearLayout_PinMessageParentLayout_generalChat);
+        textViewPinMessage = findViewById(R.id.textView_PinMessage_generalChat);
+        imageViewDeletePinMessage = findViewById(R.id.imageView_ClosePinMessage_generalChat);
+        imageButtonScrollDown = findViewById(R.id.imageButton_scrollDown_generalChat);
 
         // instance of bundle
         Bundle b = getIntent().getExtras();
@@ -141,7 +149,6 @@ public class GeneralChatActivity extends AppCompatActivity {
         usersCount = b.getInt("usersCount");
         groupKey = b.getString("groupKey");
 
-
         // close activity on click
         toolbar.setNavigationOnClickListener(v -> {
             finish();
@@ -149,7 +156,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         // on click opens all users list.
         toolbar.setOnClickListener(v -> {
             // check if user is admin
-            if (isUserAdmin){
+            if (isUserAdmin) {
                 // navigate to user list.
                 Intent intent = new Intent(GeneralChatActivity.this, GroupMemberActivity.class);
                 startActivity(intent);
@@ -162,26 +169,26 @@ public class GeneralChatActivity extends AppCompatActivity {
 
         // toolbar menu navigation
         toolbar.setOnMenuItemClickListener(item -> {
-            if (item.getItemId() == R.id.groupInfo){
+            if (item.getItemId() == R.id.groupInfo) {
                 // display group info or description.
                 groupInfo();
-            }else if (item.getItemId() == R.id.muteGroup) {
+            } else if (item.getItemId() == R.id.muteGroup) {
                 // check if user is admin
-                if (isUserAdmin){
+                if (isUserAdmin) {
                     if (isGroupMute) {
                         // mute group
                         muteOrUnMuteGroup("UnMute", "Do you want to un-mute group?", "UnMute", false);
-                    }else {
+                    } else {
                         //UnMute group.
                         muteOrUnMuteGroup("Mute", "Do you want to mute group?", "Mute", true);
                     }
-                }else {
+                } else {
                     // notify user not admin
                     showAlertDialog(GeneralChatActivity.this, "Admin Feature", "Only admin can access this features.");
                 }
             } else if (item.getItemId() == R.id.deleteGroup) {
                 // check if user is admin
-                if (isUserAdmin){
+                if (isUserAdmin) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     builder.setTitle("Delete Group")
                             .setMessage("Do you want to delete group?")
@@ -194,7 +201,7 @@ public class GeneralChatActivity extends AppCompatActivity {
                             });
                     AlertDialog dialog = builder.create();
                     dialog.show();
-                }else {
+                } else {
                     // notify user not admin
                     showAlertDialog(GeneralChatActivity.this, "Admin Feature", "Only admin can access this features.");
                 }
@@ -203,15 +210,18 @@ public class GeneralChatActivity extends AppCompatActivity {
         });
 
         // prevent user from sending images in chat
-        if (!isUserAdmin){
-            imageViewChatImageChooser.setVisibility(View.GONE);
+        if (!isUserAdmin) {
+            // set visibility gone for image chat view temporal display gone on starting of the application.
+            imageButtonChatImageChooser.setVisibility(View.GONE);
+            // set visibility to gone for closing image view of pin message for those who are not admin
+            imageViewDeletePinMessage.setVisibility(View.GONE);
         }
 
         // init onCreate
         init(GeneralChatActivity.this);
 
         /** close reply chat if not needed again by the user**/
-        imageViewCloseReplyChat.setOnClickListener(v -> {
+        imageButtonCloseReplyChat.setOnClickListener(v -> {
             isReplyChatSelected = false;
             linearLayoutReplyMessageGeneralChat.setVisibility(View.GONE);
         });
@@ -234,35 +244,37 @@ public class GeneralChatActivity extends AppCompatActivity {
             }
         });
 
-
         // on click for choosing image to send along user message
-        imageViewChatImageChooser.setOnClickListener(v -> {
-            isChatImageChooser = true;
+        imageButtonChatImageChooser.setOnClickListener(v -> {
             imageChooser();
 
         });
-        // on click delete image selected for chat.
-        imageViewDeleteChatImage.setOnClickListener(v -> {
+        // on click delete image selected for sending in chat messages.
+        imageButtonDeleteChatImage.setOnClickListener(v -> {
             // remove chat image and set isChatImageChooser & isChatImageSelected to false
             constraintLayoutImageFullDisplayParentLayout.setVisibility(View.GONE);
-            isChatImageChooser = false;
             isChatImageSelected = false;
         });
-        // onclick sends sends user message to cloud
-        imageViewSendUserData.setOnClickListener(v -> {
-            if (TextUtils.isEmpty(editTextUserMessage.getText())){
+        // onclick sends sends user message to realtime firebase
+        imageButtonSendUserData.setOnClickListener(v -> {
+            if (TextUtils.isEmpty(editTextUserMessage.getText())) {
 
-            }else {
-                if (user != null){
-                    if (isChatImageSelected){
+            } else {
+                if (user != null) {
+                    if (isChatImageSelected) {
+                        // sends user message with image attached.
                         sendMessageWithImage(GeneralChatActivity.this, uriChatImage);
-                    }else {
-                        // send user message to firebase without image.
+                    } else {
+                        // send user message without image attached.
                         sendMessageWithOutImage();
                     }
                 }
             }
         });
+
+        // scroll down to last position of recycler view
+        imageButtonScrollDown.setOnClickListener(v -> recyclerViewChatData.smoothScrollToPosition(recyclerViewChatData.getAdapter().getItemCount()-1));
+
     }
 
     // contextual toolbar
@@ -274,6 +286,16 @@ public class GeneralChatActivity extends AppCompatActivity {
             // Inflate a menu resource providing context menu items
             MenuInflater inflater = mode.getMenuInflater();
             inflater.inflate(R.menu.contextual_action_bar_chat, menu);
+            // if selected message to be deleted is not sent by the current user disable visibility of delete menu item
+            // Only admin can delete all messages.
+            if (!isUserAdmin) {
+                MenuItem shareItem1 = menu.findItem(R.id.pinMessage);
+                shareItem1.setVisible(false);
+                if (!messageUserId.equals(user.getUid())) {
+                    MenuItem shareItem2 = menu.findItem(R.id.delete);
+                    shareItem2.setVisible(false);
+                }
+            }
             return true;
         }
 
@@ -304,7 +326,7 @@ public class GeneralChatActivity extends AppCompatActivity {
                         })
                         .setPositiveButton("Delete", (dialog, which) -> {
                             // deletes selected message
-                            deleteSelectedMessage();
+                            deleteSelectedMessage(chatImage);
 
                             // reset highlighted position to remove highlight from row.
                             highlightedPosition = -10;
@@ -315,6 +337,22 @@ public class GeneralChatActivity extends AppCompatActivity {
                 AlertDialog dialog = builder.create();
                 dialog.show();
                 return true;
+            } else if (item.getItemId() == R.id.pinMessage) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(GeneralChatActivity.this);
+                builder.setTitle("Pin Message message")
+                        .setMessage("Pin this message in the group?")
+                        .setNegativeButton("cancel", (dialog, which) -> {
+
+                        })
+                        .setPositiveButton("Pin", (dialog, which) -> {
+                            // pin selected message
+                            pinMessage(highlightedMessage);
+                            //recyclerViewAdapterChat.notifyDataSetChanged();
+                            mode.finish(); // Action picked, so close the CAB
+
+                        });
+                AlertDialog dialog = builder.create();
+                dialog.show();
             } else if (item.getItemId() == R.id.copy) {
                 setClipboard(GeneralChatActivity.this, textToCopy);
                 Toast.makeText(GeneralChatActivity.this, "Message copied", Toast.LENGTH_SHORT).show();
@@ -339,12 +377,22 @@ public class GeneralChatActivity extends AppCompatActivity {
     };
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        // get current position of recycler view
+        int pagePosition = ((LinearLayoutManager) recyclerViewChatData.getLayoutManager()).findLastCompletelyVisibleItemPosition();
+        //store position locally in shared preferences.
+        editor.putInt(groupKey, pagePosition);
+        editor.apply();
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         recyclerViewAdapterChat.stopListening();
     }
 
-    private void selectedReplyMessage(Map<String, Object> map){
+    private void selectedReplyMessage(Map<String, Object> map) {
         isReplyChatSelected = true;
         replyUsername = (String) map.get("replyUsername");
         replyMessage = (String) map.get("replyMessage");
@@ -355,29 +403,63 @@ public class GeneralChatActivity extends AppCompatActivity {
         textViewMessageReply.setText(replyMessage);
     }
 
-    private void deleteSelectedMessage(){
+    private void pinMessage(String message) {
+        groupRef.child(groupKey).child(getStringResource(R.string.pinMessage)).setValue(message);
+        groupRef.child(groupKey).child(getStringResource(R.string.pinMessagePosition)).setValue(highlightedPosition);
+    }
+
+    private void readPinMessage() {
+        groupRef.child(groupKey).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.child(getStringResource(R.string.pinMessage)).exists()) {
+                    // set visible the parent layout for pin message.
+                    linearLayoutPinMessageParentLayout.setVisibility(View.VISIBLE);
+                    // get pin message info.
+                    pinMessagePosition = String.valueOf(snapshot.child(getStringResource(R.string.pinMessagePosition)).getValue());
+                    String pinMessage = Objects.requireNonNull(snapshot.child(getStringResource(R.string.pinMessage)).getValue()).toString();
+                    // update pin message info to ui
+                    textViewPinMessage.setText(pinMessage);
+                } else {
+                    // set Gone the parent layout for pin message if pin message does not exist.
+                    linearLayoutPinMessageParentLayout.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+        // delete pin message
+        imageViewDeletePinMessage.setOnClickListener(v -> deletePinMessage());
+    }
+
+    private void deletePinMessage() {
+        groupRef.child(groupKey).child(getStringResource(R.string.pinMessage)).removeValue();
+        groupRef.child(groupKey).child(getStringResource(R.string.pinMessagePosition)).removeValue();
+    }
+
+    private void deleteSelectedMessage(String chatImage) {
         // create instance of firebase database & database reference.
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         // reference for News/NounUpdate path.
         DatabaseReference myRef = database.getReference(groupKey);
-
-        // path to selected message key
-        Query query = myRef.child(messageKey);
-
-        query.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                // remove the value at reference
-                dataSnapshot.getRef().removeValue();
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
+        if (chatImage != null) {
+            // delete group image first
+            FirebaseStorage firebaseStorage = FirebaseStorage.getInstance();
+            StorageReference storageReference = firebaseStorage.getReferenceFromUrl(chatImage);
+            storageReference.delete().addOnSuccessListener(unused -> {
+                // delete message
+                myRef.child(messageKey).removeValue();
+            });
+        } else {
+            // delete message
+            myRef.child(messageKey).removeValue();
+        }
     }
-    private void sendMessageWithImage(Context context, Uri uri){
+
+    private void sendMessageWithImage(Context context, Uri uri) {
         // instance of progress dialog
         ProgressDialog progressBar = new ProgressDialog(context);
         // Create a reference to group profile pics
@@ -386,7 +468,7 @@ public class GeneralChatActivity extends AppCompatActivity {
 
         uploadTask.addOnFailureListener(e -> {
             // update user on failure
-            showAlertDialog(context, "Error", "Check your network" );
+            showAlertDialog(context, "Error", "Check your network");
         }).addOnProgressListener(snapshot -> {
             // update ui with progress bar
             progressBar.setCancelable(false);
@@ -439,7 +521,6 @@ public class GeneralChatActivity extends AppCompatActivity {
                     editTextUserMessage.setText(null);
                     // remove chat image and set isChatImageChooser & isChatImageSelected to false
                     constraintLayoutImageFullDisplayParentLayout.setVisibility(View.GONE);
-                    isChatImageChooser = false;
                     isChatImageSelected = false;
                     linearLayoutReplyMessageGeneralChat.setVisibility(View.GONE);
                     isReplyChatSelected = false;
@@ -456,7 +537,8 @@ public class GeneralChatActivity extends AppCompatActivity {
             });
         });
     }
-    private void sendMessageWithOutImage(){
+
+    private void sendMessageWithOutImage() {
         String uid, message, key;
 
         uid = user.getUid();
@@ -496,9 +578,9 @@ public class GeneralChatActivity extends AppCompatActivity {
         replyPosition = 0;
     }
 
-    private void chatRecyclerView(Context context){
+    private void chatRecyclerView(Context context) {
         // To display the Recycler view linearly
-        LinearLayoutManager layoutManager = new LinearLayoutManager(context,LinearLayoutManager.VERTICAL, false);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false);
         layoutManager.setStackFromEnd(true);
         recyclerViewChatData.setLayoutManager(layoutManager);
         // TODO recyclerViewChatData.setHasFixedSize(true);
@@ -512,7 +594,7 @@ public class GeneralChatActivity extends AppCompatActivity {
                 .build();
         // Connecting object of required Adapter class to
         // the Adapter class itself
-        recyclerViewAdapterChat = new RecyclerViewAdapterChat(options, GeneralChatActivity.this){
+        recyclerViewAdapterChat = new RecyclerViewAdapterChat(options, GeneralChatActivity.this) {
 
             @Override
             protected void onBindViewHolder(@NonNull ChatViewHolderSent holder, int position, @NonNull ChatModel model) {
@@ -536,7 +618,16 @@ public class GeneralChatActivity extends AppCompatActivity {
                         // close contextual action bar
                         actionMode.finish();
                     }
-
+                    // get chat image if any
+                    if (model.getImage() != null) {
+                        chatImage = model.getImage();
+                    } else {
+                        chatImage = null;
+                    }
+                    // get highlighted message for pinning
+                    highlightedMessage = model.getMessage();
+                    // get message user id
+                    messageUserId = model.getUserId();
                     // gets position selected by user to highlight
                     highlightedPosition = holder.getLayoutPosition();
                     // get selected message push key for deleting message purpose
@@ -555,7 +646,7 @@ public class GeneralChatActivity extends AppCompatActivity {
                     holder.cardViewReplyInfo.setClickable(false);
                     // set highlighted row background to grey
                     holder.itemView.setBackgroundColor(context.getResources().getColor(com.university.theme.R.color.dark_grey));
-                }else {
+                } else {
                     // set highlighted row background to selectableItemBackground
                     TypedValue outValue = new TypedValue();
                     context.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, true);
@@ -572,10 +663,19 @@ public class GeneralChatActivity extends AppCompatActivity {
             @Override
             public void onDataChanged() {
                 super.onDataChanged();
-
-                //recyclerViewChatData.scrollToPosition(10);
+                // Connecting Adapter class with the Recycler view
+                // Function to tell the app to start getting data from database
+                recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
+                // read recycler page position from shared preferences.
+                int recyclerPagePosition = sharedPref.getInt(groupKey, 0);
+                if (recyclerPagePosition != 0) {
+                    // scroll to last position of recycler view by the user.
+                    recyclerViewChatData.scrollToPosition(recyclerPagePosition);
+                    //store position locally in shared preferences.
+                    editor.putInt(groupKey, 0);
+                    editor.apply();
+                }
             }
-
 
 
         };
@@ -587,32 +687,35 @@ public class GeneralChatActivity extends AppCompatActivity {
 
     }
 
-    private void init(Context context){
+    private void init(Context context) {
+        // set visibility for pin message gone on start of application
+        //linearLayoutPinMessageParentLayout.setVisibility(View.GONE);
+        // on click on pin message recycler view scrolls to the pin message position
+        linearLayoutPinMessageParentLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                recyclerViewChatData.smoothScrollToPosition(Integer.parseInt(pinMessagePosition));
+            }
+        });
+        // read pin message from firebase
+        readPinMessage();
         // set reply layout visibility gone by default
         linearLayoutReplyMessageGeneralChat.setVisibility(View.GONE);
         // for recycler view updating user chat.
         chatRecyclerView(context);
-        groupRef.child(groupKey).child(getStringResource(R.string.adminOnly)).addValueEventListener(new ValueEventListener() {
+        // read groups from firebase.
+        groupRef.child(groupKey).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()){
-                    isGroupMute = (boolean) snapshot.getValue();
+                // get group mute status
+                if (snapshot.child(getStringResource(R.string.adminOnly)).exists()) {
+                    isGroupMute = (boolean) snapshot.child(getStringResource(R.string.adminOnly)).getValue();
                     // checks isGroupMute and update user messaging ui.
                     checkIsGroupAdminOnly(isGroupMute);
                 }
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
-        groupRef.child(groupKey).child(getStringResource(R.string.groupImage)).addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()){
-                    groupImage = snapshot.getValue().toString();
+                // get group image string url (if any)
+                if (snapshot.child(getStringResource(R.string.groupImage)).exists()) {
+                    groupImage = snapshot.child(getStringResource(R.string.groupImage)).getValue().toString();
                 }
 
             }
@@ -622,10 +725,11 @@ public class GeneralChatActivity extends AppCompatActivity {
 
             }
         });
+
         userRef.child(user.getUid()).child(getStringResource(R.string.username)).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()){
+                if (snapshot.exists()) {
                     username = snapshot.getValue().toString();
                 }
             }
@@ -640,58 +744,27 @@ public class GeneralChatActivity extends AppCompatActivity {
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        // if isMessageImageChooser is true it indicates get image uri for user message (else) get image for group profile pics
-        if (isChatImageChooser){
-            // compare the requestCode with the
-            // PICK_IMAGE constant
-            if (requestCode == PICK_IMAGE) {
-                if (data != null){
-                    uriChatImage = data.getData();
-                    // stores true if image is selected
-                    isChatImageSelected = true;
-                    constraintLayoutImageFullDisplayParentLayout.setVisibility(View.VISIBLE);
-                    imageViewFullDisplay.setImageURI(uriChatImage);
-                }else{
-                    // stores false if image is not selected
-                    isChatImageSelected = false;
-                    isChatImageChooser = false;
-                    constraintLayoutImageFullDisplayParentLayout.setVisibility(View.GONE);
-                }
-
+        // compare the requestCode with the
+        // PICK_IMAGE constant
+        if (requestCode == PICK_IMAGE) {
+            if (data != null) {
+                uriChatImage = data.getData();
+                // stores true if image is selected
+                isChatImageSelected = true;
+                constraintLayoutImageFullDisplayParentLayout.setVisibility(View.VISIBLE);
+                imageViewFullDisplay.setImageURI(uriChatImage);
+            } else {
+                // stores false if image is not selected
+                isChatImageSelected = false;
+                constraintLayoutImageFullDisplayParentLayout.setVisibility(View.GONE);
             }
-        }else {
-            // compare the requestCode with the
-            // PICK_IMAGE constant
-            if (requestCode == PICK_IMAGE) {
-                if (data != null){
-                    // stores true if image is selected
-                    isGroupImageSelected = true;
-                    // Get the url of the image from data
-                    // set uri to view model
-                    generalChatViewModel.setMutableLiveDataGroupImageUri(data.getData());
 
-                }else{
-                    // stores false if image is not selected
-                    isGroupImageSelected = false;
-                }
-
-            }
         }
-
     }
 
-    private void deleteGroup(String groupImages){
-        // delete group chatImages.
-        FirebaseStorage firebaseStorage1 = FirebaseStorage.getInstance();
-        StorageReference storageGroupRef = firebaseStorage1.getReference().child(groupKey);
-        storageGroupRef.delete().addOnSuccessListener(unused1 -> {
-            Toast.makeText(this, "deletegroup", Toast.LENGTH_SHORT).show();
-
-        });
-
-
+    private void deleteGroup(String groupImages) {
         // check if group has image before deleting group
-        if (groupImages != null){
+        if (groupImages != null) {
             // delete group image first
             FirebaseStorage firebaseStorage = FirebaseStorage.getInstance();
             StorageReference storageReference = firebaseStorage.getReferenceFromUrl(groupImages);
@@ -706,7 +779,7 @@ public class GeneralChatActivity extends AppCompatActivity {
             }).addOnFailureListener(e -> {
                 Toast.makeText(this, "Error: can't delete group", Toast.LENGTH_SHORT).show();
             });
-        }else {
+        } else {
             // delete group
             groupRef.child(groupKey).removeValue();
             // delete group chat messages.
@@ -716,7 +789,7 @@ public class GeneralChatActivity extends AppCompatActivity {
 
     }
 
-    private void groupInfo(){
+    private void groupInfo() {
         // alert dialog
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         final View customLayout = getLayoutInflater().inflate(R.layout.group_info_custom_dialog, null);
@@ -726,21 +799,10 @@ public class GeneralChatActivity extends AppCompatActivity {
         // instantiate views
         textViewGroupInfoMessage = customLayout.findViewById(R.id.textView_groupInfo);
         imageViewGroupInfoEdit = customLayout.findViewById(R.id.imageView_edit_groupInfo);
-        imageViewGroupImage = customLayout.findViewById(R.id.imageView_groupImage_groupInfo);
-        imageViewDeleteGroupImage = customLayout.findViewById(R.id.imageView_delete_groupInfo);
-        linearEditLayoutGroupInfo = customLayout.findViewById(R.id.linearLayout_editLayout_groupInfo);
-        autoCompleteTextViewInfo = customLayout.findViewById(R.id.autoCompleteTextview_info_groupInfo);
-        textInputLayoutInfo = customLayout.findViewById(R.id.textInputLayout_info_groupInfo);
-        buttonCancel = customLayout.findViewById(R.id.button_cancel_groupInfo);
-        buttonProceed = customLayout.findViewById(R.id.button_proceed_groupInfo);
-
-        // set edit layout visibility to GONE
-        linearEditLayoutGroupInfo.setVisibility(View.GONE);
-        // clear error when clicked
-        clearError(autoCompleteTextViewInfo, textInputLayoutInfo);
+        textViewGroupName = customLayout.findViewById(R.id.textView_groupName_groupInfo);
 
         // check if user is admin
-        if (!isUserAdmin){
+        if (!isUserAdmin) {
             // notify user not admin and set edit group button visibility to GONE
             imageViewGroupInfoEdit.setVisibility(View.GONE);
         }
@@ -750,7 +812,9 @@ public class GeneralChatActivity extends AppCompatActivity {
         queryUser.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.child(groupKey).child(getStringResource(R.string.groupInfo)).exists()){
+                String groupName = snapshot.child(groupKey).child(getStringResource(R.string.groupName)).getValue().toString();
+                textViewGroupName.setText(groupName);
+                if (snapshot.child(groupKey).child(getStringResource(R.string.groupInfo)).exists()) {
                     // get group info or description from database and update user ui.
                     String groupInfo = snapshot.child(groupKey).child(getStringResource(R.string.groupInfo)).getValue().toString();
                     textViewGroupInfoMessage.setText(groupInfo);
@@ -764,164 +828,40 @@ public class GeneralChatActivity extends AppCompatActivity {
             }
         });
 
-        // get group profile pics and update ui
-        if ( groupImage != null){
-            isPreviousImage = true;
-            Glide.with(GeneralChatActivity.this).load(groupImage).into(imageViewGroupImage);
-        }
-        // on click set visible group info  edit layout
+        // on click on edit image icon open group info edit activity.
         imageViewGroupInfoEdit.setOnClickListener(v -> {
-            textViewGroupInfoMessage.setVisibility(View.GONE);
-            linearEditLayoutGroupInfo.setVisibility(View.VISIBLE);
-            dialog.setCancelable(false);
-            // get info and write to edit auto complete textView
-            autoCompleteTextViewInfo.setText(textViewGroupInfoMessage.getText());
+            Intent intent = new Intent(GeneralChatActivity.this, GroupInfoEditActivity.class);
+            intent.putExtra("groupKey", groupKey);
+            startActivity(intent);
         });
-        // delete group image.
-        imageViewDeleteGroupImage.setOnClickListener(v -> {
-            imageViewGroupImage.setImageResource(R.drawable.ic_baseline_add_a_photo_24);
-            isGroupImageSelected = false;
-            isPreviousImage = false;
-        });
-        // on click open image chooser
-        imageViewGroupImage.setOnClickListener(v -> {
-            imageChooser();
-        });
-        // display selected image in image view
-        generalChatViewModel.getGroupImageUriLivedata().observe(this, uri -> {
-            imageViewGroupImage.setImageURI(uri);
-            uriGroupImage = uri;
-        });
-
-        // proceed button
-        buttonProceed.setOnClickListener(v -> {
-            if (isEmpty(autoCompleteTextViewInfo)){
-                textInputLayoutInfo.setError("group info empty");
-            }else {
-                String info = autoCompleteTextViewInfo.getText().toString();
-                // check if user selects new image to upload
-                if (isGroupImageSelected){
-                    // if group has previous image before updating, delete old image
-                    if (groupImage != null){
-                        // deletes initial(old) group images.
-                        FirebaseStorage firebaseStorage = FirebaseStorage.getInstance();
-                        StorageReference storageReference = firebaseStorage.getReferenceFromUrl(groupImage);
-                        storageReference.delete().addOnSuccessListener(unused -> {
-                            dialog.dismiss();
-                            updateGroupInfoWithImage(GeneralChatActivity.this, uriGroupImage, info);
-                        });
-                    } else {
-                        // update new group image
-                        dialog.dismiss();
-                        updateGroupInfoWithImage(GeneralChatActivity.this, uriGroupImage, info);
-                    }
-
-                }else{
-                    // check if there is previous image.
-                    if (isPreviousImage) {
-                        // update group info
-                        groupRef.child(groupKey).child(getStringResource(R.string.groupInfo)).setValue(info);
-                        dialog.dismiss();
-                        finish();
-                    }else {
-                        if (groupImage != null){
-                            // delete initial group images if any
-                            FirebaseStorage firebaseStorage = FirebaseStorage.getInstance();
-                            StorageReference storageReference = firebaseStorage.getReferenceFromUrl(groupImage);
-                            storageReference.delete().addOnSuccessListener(unused -> {
-                                // update group info
-                                groupRef.child(groupKey).child(getStringResource(R.string.groupImage)).setValue(null);
-                                groupRef.child(groupKey).child(getStringResource(R.string.groupInfo)).setValue(info);
-                                Toast.makeText(GeneralChatActivity.this, "updated successful", Toast.LENGTH_SHORT).show();
-                                dialog.dismiss();
-                                finish();
-                            });
-                        }else {
-                            // update group info
-                            groupRef.child(groupKey).child(getStringResource(R.string.groupImage)).setValue(null);
-                            groupRef.child(groupKey).child(getStringResource(R.string.groupInfo)).setValue(info);
-                            dialog.dismiss();
-                            finish();
-                        }
-                    }
-                }
-
-            }
-        });
-        // cancel button dismiss dialog
-        buttonCancel.setOnClickListener(v -> dialog.dismiss());
-        isGroupImageSelected = false;
         // show dialog
         dialog.show();
 
     }
 
-    private void updateGroupInfoWithImage(Context context, Uri uri, String info){
-        // instance of progress dialog
-        ProgressDialog progressBar = new ProgressDialog(context);
-        // Create a reference to group profile pics
-        groupImageStorageRef = storageRef.child("groupProfilePics/" + uri.getLastPathSegment());
-        uploadTask = groupImageStorageRef.putFile(uri);
-
-        uploadTask.addOnFailureListener(e -> {
-            // update user on failure
-            showAlertDialog(context, "Error", "Updating of group info failed." );
-        }).addOnProgressListener(snapshot -> {
-            // update ui with progress bar
-            progressBar.setCancelable(false);
-            progressBar.setMessage("Updating group.........");
-            progressBar.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-            progressBar.show();
-        }).addOnSuccessListener(taskSnapshot -> {
-            Task<Uri> urlTask = uploadTask.continueWithTask(task -> {
-                if (!task.isSuccessful()) {
-                    throw task.getException();
-                }
-
-                // Continue with the task to get the download URL
-                return groupImageStorageRef.getDownloadUrl();
-            }).addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    // gets image download url
-                    Uri downloadUri = task.getResult();
-                    // update group info
-                    groupRef.child(groupKey).child(getStringResource(R.string.groupImage)).setValue(downloadUri.toString());
-                    groupRef.child(groupKey).child(getStringResource(R.string.groupInfo)).setValue(info);
-                    // dismiss progress bar
-                    progressBar.dismiss();
-                    Toast.makeText(context, "updated successful", Toast.LENGTH_SHORT).show();
-                    // close activity
-                    finish();
-                } else {
-                    // Handle failures
-                    // ...
-                }
-            });
-        });
-    }
-    private void checkIsGroupAdminOnly(boolean isGroupMute){
+    private void checkIsGroupAdminOnly(boolean isGroupMute) {
         // checks if the group isAminOnly or not(for all users to chat)
-        if (isGroupMute){
+        if (isGroupMute) {
             // update appbar menu
             item1.setTitle("UnMute");
             // checks if user is an admin and not also ban for violation
-            if (isUserAdmin){
+            if (isUserAdmin) {
                 // checks if user is not ban for violation
                 if (isUserBan) {
                     linearLayoutUser.setVisibility(View.GONE);
                     // updates user for rule violation
                     textViewMessage.setText("For Violation of rules you have been ban from sending messages");
                     linearLayoutAdmin.setVisibility(View.VISIBLE);
-                }else {
+                } else {
                     linearLayoutUser.setVisibility(View.VISIBLE);
                     linearLayoutAdmin.setVisibility(View.GONE);
                 }
-            }else {
+            } else {
                 linearLayoutUser.setVisibility(View.GONE);
                 linearLayoutAdmin.setVisibility(View.VISIBLE);
             }
 
-        }else {
+        } else {
             // update appbar menu
             item1.setTitle("Mute");
             // checks if user is not ban for violation
@@ -930,7 +870,7 @@ public class GeneralChatActivity extends AppCompatActivity {
                 // updates user for rule violation
                 textViewMessage.setText("For Violation of rules you have been ban from sending messages");
                 linearLayoutAdmin.setVisibility(View.VISIBLE);
-            }else {
+            } else {
                 linearLayoutUser.setVisibility(View.VISIBLE);
                 linearLayoutAdmin.setVisibility(View.GONE);
             }
@@ -948,7 +888,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         startActivityForResult(Intent.createChooser(i, "Select Picture"), PICK_IMAGE);
     }
 
-    private void muteOrUnMuteGroup(String title, String message, String positiveButton, boolean muteorunmute){
+    private void muteOrUnMuteGroup(String title, String message, String positiveButton, boolean muteorunmute) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(title)
                 .setMessage(message)
@@ -963,7 +903,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    private void showAlertDialog(Context context, String title, String message){
+    private void showAlertDialog(Context context, String title, String message) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(title)
                 .setMessage(message)
@@ -973,13 +913,14 @@ public class GeneralChatActivity extends AppCompatActivity {
         AlertDialog dialog = builder.create();
         dialog.show();
     }
+
     // returns string from resources
-    private String getStringResource(int string){
+    private String getStringResource(int string) {
         return getResources().getString(string);
     }
 
     private void setClipboard(Context context, String text) {
-        if(android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.HONEYCOMB) {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.HONEYCOMB) {
             android.text.ClipboardManager clipboard = (android.text.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
             clipboard.setText(text);
         } else {
@@ -990,7 +931,7 @@ public class GeneralChatActivity extends AppCompatActivity {
     }
 
     // clears textInput layout error
-    private void clearError(AutoCompleteTextView autoCompleteTextView, TextInputLayout textInputLayout){
+    private void clearError(AutoCompleteTextView autoCompleteTextView, TextInputLayout textInputLayout) {
         autoCompleteTextView.setOnClickListener(v -> textInputLayout.setError(null));
     }
 
@@ -998,8 +939,9 @@ public class GeneralChatActivity extends AppCompatActivity {
     private boolean isEmpty(AutoCompleteTextView autoCompleteTextView) {
         return TextUtils.isEmpty(autoCompleteTextView.getEditableText());
     }
+
     // return date in string.
-    public String getDate(){
+    public String getDate() {
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMM d-hh:mmaaa");
         String date = simpleDateFormat.format(calendar.getTime());

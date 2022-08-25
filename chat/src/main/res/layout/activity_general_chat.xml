@@ -18,11 +18,11 @@
             style="@style/Widget.App.Toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:navigationIcon="@drawable/ic_baseline_arrow_back_24_white"
             android:gravity="center"
             app:menu="@menu/top_app_bar_general_chat"
-            app:title=""
-            app:subtitle="956 members">
+            app:navigationIcon="@drawable/ic_baseline_arrow_back_24_white"
+            app:subtitle="956 members"
+            app:title="">
 
 
         </com.google.android.material.appbar.MaterialToolbar>
@@ -32,19 +32,44 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior"
-        android:orientation="vertical">
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerView_generalChat"
+        android:orientation="vertical"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+
+        <include layout="@layout/pin_message_layout" />
+
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1"/>
+            android:layout_weight="1">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerView_generalChat"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginStart="0dp"
+                android:layout_marginTop="0dp"
+                android:layout_weight="1" />
+
+            <ImageButton
+                android:id="@+id/imageButton_scrollDown_generalChat"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentBottom="true"
+                android:backgroundTint="@color/white"
+                android:src="@drawable/ic_baseline_arrow_downward_24" />
+
+        </RelativeLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@color/transparent">
+            android:background="@color/transparent"
+            android:orientation="vertical">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/constrainLayout_imageViewDisplay_parentLayout"
@@ -52,16 +77,16 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:background="@color/dark_grey"
-                android:visibility="gone"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:visibility="gone">
 
                 <androidx.cardview.widget.CardView
                     android:id="@+id/cardView_"
                     android:layout_width="200dp"
                     android:layout_height="200dp"
+                    android:layout_margin="5dp"
                     app:cardBackgroundColor="@color/white"
                     app:cardCornerRadius="10dp"
-                    android:layout_margin="5dp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent">
@@ -73,11 +98,12 @@
                         android:src="@drawable/noun_icon" />
                 </androidx.cardview.widget.CardView>
 
-                <ImageView
-                    android:id="@+id/imageView_delete_Message_generalChat"
+                <ImageButton
+                    android:id="@+id/imageButton_delete_Message_generalChat"
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:scaleType="centerInside"
+                    android:backgroundTint="@color/dark_grey"
                     android:src="@drawable/ic_baseline_delete_24"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -92,51 +118,54 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@color/ash"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
                 <ImageView
                     android:id="@+id/imageView_reply_generalChat"
                     android:layout_width="45dp"
                     android:layout_height="45dp"
                     android:layout_gravity="bottom"
-                    android:src="@drawable/forward_icon"
-                    android:scaleType="centerInside"/>
+                    android:scaleType="centerInside"
+                    android:src="@drawable/forward_icon" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:orientation="vertical"
-                    android:gravity="center_vertical"
                     android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:orientation="vertical"
                     android:padding="2dp">
+
                     <TextView
                         android:id="@+id/textView_usernameReply_generalChat"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:singleLine="true"
-                        android:textSize="15dp"
                         android:text="Username"
-                        android:textStyle="bold"
-                        android:textColor="@color/secondaryColor"/>
+                        android:textColor="@color/secondaryColor"
+                        android:textSize="15dp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/textView_messageReply_generalChat"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:singleLine="true"
-                        android:textSize="14dp"
                         android:text="Username"
-                        android:textColor="@color/black"/>
+                        android:textColor="@color/black"
+                        android:textSize="14dp" />
 
                 </LinearLayout>
-                <ImageView
-                    android:id="@+id/imageView_CloseReply_generalChat"
+
+                <ImageButton
+                    android:id="@+id/imageButton_CloseReply_generalChat"
                     android:layout_width="45dp"
                     android:layout_height="45dp"
                     android:layout_gravity="bottom"
-                    android:src="@drawable/ic_outline_close_24"
-                    android:scaleType="centerInside"/>
+                    android:scaleType="centerInside"
+                    android:backgroundTint="@color/ash"
+                    android:src="@drawable/ic_outline_close_24" />
 
 
             </LinearLayout>
@@ -147,49 +176,53 @@
                 android:layout_height="wrap_content"
                 android:background="@color/white"
                 android:orientation="horizontal">
-                <ImageView
-                    android:id="@+id/imageView_imageChooser_generalChat"
+
+                <ImageButton
+                    android:id="@+id/imageButton_imageChooser_generalChat"
                     android:layout_width="45dp"
                     android:layout_height="45dp"
                     android:layout_gravity="bottom"
-                    android:src="@drawable/ic_baseline_image_24"
-                    android:scaleType="centerInside"/>
+                    android:scaleType="centerInside"
+                    android:backgroundTint="@color/white"
+                    android:src="@drawable/ic_baseline_image_24" />
 
                 <EditText
                     android:id="@+id/edittext_inputMessage_generalChat"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
                     android:background="@color/transparent"
                     android:hint="Message"
-                    android:layout_gravity="center_vertical"
                     android:maxLines="6"
-                    android:padding="10dp"
-                    android:layout_weight="1"/>
+                    android:padding="10dp" />
 
-                <ImageView
-                    android:id="@+id/imageView_sendMessage_generalChat"
+                <ImageButton
+                    android:id="@+id/imageButton_sendMessage_generalChat"
                     android:layout_width="45dp"
                     android:layout_height="45dp"
                     android:layout_gravity="bottom"
-                    android:src="@drawable/ic_baseline_send_24"
-                    android:scaleType="centerInside"/>
+                    android:scaleType="centerInside"
+                    android:backgroundTint="@color/white"
+                    android:src="@drawable/ic_baseline_send_24" />
             </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/linearLayout_adminOnly_generalChat"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
                 android:background="@color/white"
+                android:orientation="horizontal"
                 android:padding="10dp">
+
                 <TextView
                     android:id="@+id/textView_message_generalChat"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:text="Only admins are able to post here."
-                    android:textSize="16dp"
-                    android:textColor="@color/black"/>
+                    android:textColor="@color/black"
+                    android:textSize="16dp" />
             </LinearLayout>
 
         </LinearLayout>

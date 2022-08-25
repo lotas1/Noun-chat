@@ -95,7 +95,6 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
             intent.putExtra("groupImage", model.getGroupImage());
             // create the transition animation - the images in the layouts
             // of both activities are defined
-
             ActivityOptions options = ActivityOptions
                     .makeSceneTransitionAnimation((Activity) context, holder.imageViewGroupProfilePics, "groupPic" + holder.getAbsoluteAdapterPosition());
             // start the activity

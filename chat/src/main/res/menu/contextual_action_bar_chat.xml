@@ -6,17 +6,23 @@
         android:id="@+id/reply"
         android:icon="@drawable/ic_baseline_reply_24"
         android:title="reply"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
 
     <item
         android:id="@+id/delete"
         android:icon="@drawable/ic_baseline_delete_24_white"
         android:title="delete"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/pinMessage"
+        android:icon="@drawable/ic_baseline_push_pin_24"
+        android:title="delete"
+        app:showAsAction="always"/>
+
 
     <item
         android:id="@+id/copy"
         android:title="copy"
         android:icon="@drawable/ic_baseline_content_copy_24"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
 </menu>

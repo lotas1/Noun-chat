@@ -28,8 +28,8 @@
     <string name="replyMessage">replyMessage</string>
     <string name="replyUsername">replyUsername</string>
     <string name="replyPosition">replyPosition</string>
-
-
+    <string name="pinMessage">pinMessage</string>
+    <string name="pinMessagePosition">pinMessagePosition</string>
 
 
 </resources>
