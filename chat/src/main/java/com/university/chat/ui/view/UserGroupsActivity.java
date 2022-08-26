@@ -24,6 +24,7 @@ import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
@@ -55,6 +56,7 @@ public class UserGroupsActivity extends AppCompatActivity {
     private TextView textViewTitleProfile;
     private String eUsername, eDepartment;
     private CardView cardViewFAQEntry;
+    private FloatingActionButton fab;
 
     private DatabaseReference myRef;
     private FirebaseDatabase database;
@@ -85,11 +87,25 @@ public class UserGroupsActivity extends AppCompatActivity {
         toolbar = findViewById(R.id.toolbar_userGroup);
         recyclerViewUserGroups = findViewById(R.id.recyclerView_userGroup);
         cardViewFAQEntry = findViewById(R.id.cardView_FAQEntry);
+        fab = findViewById(R.id.floating_action_button_userGroup);
 
         // open faq online activity on click in faq entry view
         cardViewFAQEntry.setOnClickListener(v -> {
             Intent i = new Intent(UserGroupsActivity.this, FaqOnlineActivity.class);
             startActivity(i);
+        });
+
+        // opens new group on click on fab
+        fab.setOnClickListener(v -> {
+            // check if user is admin
+            if (isUserAdmin){
+                // navigate to view for creating group.
+                Intent intent = new Intent(UserGroupsActivity.this, NewGroupActivity.class);
+                startActivity(intent);
+            }else {
+                // notify user not admin
+                showAlertDialog(UserGroupsActivity.this, "Admin Feature", "Only admin can access this features.");
+            }
         });
 
         // navigate back on click
