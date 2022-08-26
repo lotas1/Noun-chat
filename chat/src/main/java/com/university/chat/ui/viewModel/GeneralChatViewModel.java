@@ -5,7 +5,7 @@ import android.net.Uri;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModel;
 
-import com.university.chat.ui.SingleLiveEvent;
+import com.university.chat.utility.SingleLiveEvent;
 
 import java.util.HashMap;
 import java.util.Map;

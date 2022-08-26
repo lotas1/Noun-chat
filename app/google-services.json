@@ -1,24 +1,83 @@
 {
   "project_info": {
     "project_number": "886004575187",
+    "firebase_url": "https://noun-chat-default-rtdb.firebaseio.com",
     "project_id": "noun-chat",
     "storage_bucket": "noun-chat.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:886004575187:android:b457d63f290b862b7add26",
+        "mobilesdk_app_id": "1:886004575187:android:b9d9f6ad3acf9ef97add26",
         "android_client_info": {
           "package_name": "com.lotas.nounchat"
         }
       },
       "oauth_client": [
         {
-          "client_id": "886004575187-2s6pohgjkpejim3s8eqdjrthljjjvlsu.apps.googleusercontent.com",
+          "client_id": "886004575187-v8um8aqf4nmhdnhfa8m7qoeg8mfci958.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQi08WFBHN16E20heyHM0IZNDXnbtKpg4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "886004575187-v8um8aqf4nmhdnhfa8m7qoeg8mfci958.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:886004575187:android:398ab33ff0e9164b7add26",
+        "android_client_info": {
+          "package_name": "com.university.allgroupusers"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "886004575187-v8um8aqf4nmhdnhfa8m7qoeg8mfci958.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAQi08WFBHN16E20heyHM0IZNDXnbtKpg4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "886004575187-v8um8aqf4nmhdnhfa8m7qoeg8mfci958.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:886004575187:android:6c46adee8acfcf587add26",
+        "android_client_info": {
+          "package_name": "com.university.chat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "886004575187-4n2cf61stkq1b4rrv1d4n5c7a7qfo6ib.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.lotas.nounchat",
-            "certificate_hash": "f05019fffceed3432848414f3ba5a1d229e0fa4d"
+            "package_name": "com.university.chat",
+            "certificate_hash": "591de833e63542304d2fad701a7d07c351b3a652"
           }
         },
         {

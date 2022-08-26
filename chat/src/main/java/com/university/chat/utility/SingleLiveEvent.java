@@ -1,4 +1,4 @@
-package com.university.chat.ui;
+package com.university.chat.utility;
 
 /*
  *  Copyright 2017 Google Inc.

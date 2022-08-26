@@ -1,6 +1,12 @@
 package com.university.chat.ui.adapter;
 
 import android.content.Context;
+import android.os.Build;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -12,6 +18,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelStoreOwner;
 import androidx.recyclerview.widget.RecyclerView;
@@ -31,8 +38,6 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
     private Context context;
     private FirebaseUser user;
     private GeneralChatViewModel generalChatViewModel;
-    private static final int VIEW_TYPE_MESSAGE_SENT = 1;
-    private static final int VIEW_TYPE_MESSAGE_RECEIVED = 2;
 
 
 
@@ -53,7 +58,6 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
 
     @Override
     protected void onBindViewHolder(@NonNull ChatViewHolderSent holder, int position, @NonNull ChatModel model) {
-
         ViewGroup.MarginLayoutParams cardViewMarginParams = (ViewGroup.MarginLayoutParams) holder.linearParentLayoutSent.getLayoutParams();
         if (Objects.equals(model.getUserId(), user.getUid())){
             //cardViewMarginParams.setMargins(100, 0, 0, 0);
@@ -103,7 +107,6 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
 
 
 
-
     }
 
     @NonNull
@@ -114,7 +117,7 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
         return new RecyclerViewAdapterChat.ChatViewHolderSent(view);
     }
 
-    public static class ChatViewHolderSent extends RecyclerView.ViewHolder{
+    public class ChatViewHolderSent extends RecyclerView.ViewHolder{
         private TextView textViewUsernameSent, textViewMessageSent, textViewDateSent, textViewUsernameReply, textViewMessageReply;
         private LinearLayout linearParentLayoutSent;
         public CardView cardView, cardViewImageFullDisplay, cardViewReplyInfo;

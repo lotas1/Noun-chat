@@ -129,7 +129,7 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
         return new UserGroupsRecyclerViewAdapter.UserGroupsViewHolder(view);
     }
 
-    class UserGroupsViewHolder extends RecyclerView.ViewHolder{
+   public class UserGroupsViewHolder extends RecyclerView.ViewHolder{
         TextView textViewGroupName, textViewLastMessageTime, textViewLastMessage;
         ImageView imageViewGroupProfilePics;
 

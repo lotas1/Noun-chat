@@ -1,4 +1,4 @@
-package com.university.chat;
+package com.university.chat.utility;
 
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;

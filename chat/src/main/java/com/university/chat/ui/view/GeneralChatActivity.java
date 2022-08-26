@@ -255,18 +255,27 @@ public class GeneralChatActivity extends AppCompatActivity {
             constraintLayoutImageFullDisplayParentLayout.setVisibility(View.GONE);
             isChatImageSelected = false;
         });
+
         // onclick sends sends user message to realtime firebase
         imageButtonSendUserData.setOnClickListener(v -> {
             if (TextUtils.isEmpty(editTextUserMessage.getText())) {
 
             } else {
                 if (user != null) {
+                    String message = editTextUserMessage.getText().toString();
                     if (isChatImageSelected) {
                         // sends user message with image attached.
-                        sendMessageWithImage(GeneralChatActivity.this, uriChatImage);
+                        sendMessageWithImage(GeneralChatActivity.this, uriChatImage, message);
                     } else {
                         // send user message without image attached.
-                        sendMessageWithOutImage();
+                        sendMessageWithOutImage(message);
+                        //if (BadWordsFilter.filterText(message)){
+                        //    Toast.makeText(this, "This message was blocked because a bad word was found.", Toast.LENGTH_SHORT).show();
+                        //}else{
+                        //    // send user message without image attached.
+                        //    sendMessageWithOutImage(message);
+                        //}
+
                     }
                 }
             }
@@ -459,7 +468,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         }
     }
 
-    private void sendMessageWithImage(Context context, Uri uri) {
+    private void sendMessageWithImage(Context context, Uri uri, String messageChat) {
         // instance of progress dialog
         ProgressDialog progressBar = new ProgressDialog(context);
         // Create a reference to group profile pics
@@ -488,14 +497,13 @@ public class GeneralChatActivity extends AppCompatActivity {
                     // gets image download url
                     Uri downloadUri = task.getResult();
 
-                    String uid, message, key;
+                    String uid, key;
                     uid = user.getUid();
-                    message = editTextUserMessage.getText().toString();
                     key = chatRef.push().getKey();
 
                     Map<String, Object> map = new HashMap<>();
                     map.put(getStringResource(R.string.username), username);
-                    map.put(getStringResource(R.string.message), message);
+                    map.put(getStringResource(R.string.message), messageChat);
                     map.put(getStringResource(R.string.time), getDate());
                     map.put(getStringResource(R.string.userId), uid);
                     map.put(getStringResource(R.string.key), key);
@@ -516,7 +524,7 @@ public class GeneralChatActivity extends AppCompatActivity {
                     map.clear();
                     // update last message sender.
                     groupRef.child(groupKey).child(getStringResource(R.string.sender)).setValue(username);
-                    groupRef.child(groupKey).child(getStringResource(R.string.lastMessage)).setValue(message);
+                    groupRef.child(groupKey).child(getStringResource(R.string.lastMessage)).setValue(messageChat);
                     // clear view.
                     editTextUserMessage.setText(null);
                     // remove chat image and set isChatImageChooser & isChatImageSelected to false
@@ -538,11 +546,10 @@ public class GeneralChatActivity extends AppCompatActivity {
         });
     }
 
-    private void sendMessageWithOutImage() {
-        String uid, message, key;
+    private void sendMessageWithOutImage(String message) {
+        String uid, key;
 
         uid = user.getUid();
-        message = editTextUserMessage.getText().toString();
         key = chatRef.push().getKey();
 
         Map<String, Object> map = new HashMap<>();
@@ -665,7 +672,7 @@ public class GeneralChatActivity extends AppCompatActivity {
                 super.onDataChanged();
                 // Connecting Adapter class with the Recycler view
                 // Function to tell the app to start getting data from database
-                recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
+                //recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
                 // read recycler page position from shared preferences.
                 int recyclerPagePosition = sharedPref.getInt(groupKey, 0);
                 if (recyclerPagePosition != 0) {

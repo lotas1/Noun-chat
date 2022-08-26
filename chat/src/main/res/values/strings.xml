@@ -31,5 +31,8 @@
     <string name="pinMessage">pinMessage</string>
     <string name="pinMessagePosition">pinMessagePosition</string>
 
+    <string name="title">title</string>
+    <string name="body">body</string>
+
 
 </resources>

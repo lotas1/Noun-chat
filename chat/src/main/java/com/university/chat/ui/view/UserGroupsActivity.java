@@ -3,6 +3,7 @@ package com.university.chat.ui.view;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -34,7 +35,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.university.chat.R;
-import com.university.chat.RecyclerViewItemDecoration;
+import com.university.chat.utility.RecyclerViewItemDecoration;
 import com.university.chat.data.model.UserGroupModel;
 import com.university.chat.ui.adapter.UserGroupsRecyclerViewAdapter;
 
@@ -53,6 +54,7 @@ public class UserGroupsActivity extends AppCompatActivity {
     private RecyclerView recyclerViewUserGroups;
     private TextView textViewTitleProfile;
     private String eUsername, eDepartment;
+    private CardView cardViewFAQEntry;
 
     private DatabaseReference myRef;
     private FirebaseDatabase database;
@@ -82,6 +84,13 @@ public class UserGroupsActivity extends AppCompatActivity {
         // instantiate view
         toolbar = findViewById(R.id.toolbar_userGroup);
         recyclerViewUserGroups = findViewById(R.id.recyclerView_userGroup);
+        cardViewFAQEntry = findViewById(R.id.cardView_FAQEntry);
+
+        // open faq online activity on click in faq entry view
+        cardViewFAQEntry.setOnClickListener(v -> {
+            Intent i = new Intent(UserGroupsActivity.this, FaqOnlineActivity.class);
+            startActivity(i);
+        });
 
         // navigate back on click
         toolbar.setNavigationOnClickListener(v -> {
