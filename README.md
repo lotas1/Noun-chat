@@ -6,4 +6,6 @@
 * Being able to Ban user(Only admin).
 * Replying chat and scrolling to replied chat position on click.
 * Deleting and editing group info(Admin only).
-* 
+* Pinning messages
+* Sving last user chat position for returning time(just like telegram).
+* Deleting chat message.
