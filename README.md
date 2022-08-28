@@ -7,5 +7,5 @@
 * Replying chat and scrolling to replied chat position on click.
 * Deleting and editing group info(Admin only).
 * Pinning messages
-* Sving last user chat position for returning time(just like telegram).
+* Saving last user chat position for returning time(just like telegram).
 * Deleting chat message.

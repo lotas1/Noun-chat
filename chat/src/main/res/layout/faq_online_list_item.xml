@@ -9,7 +9,7 @@
         android:id="@+id/textView_faq_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="FAQ title"
+        android:text=""
         android:textSize="16dp"
         android:fontFamily="@font/poppins_semibold"
         android:textColor="@color/black"/>
@@ -18,7 +18,7 @@
         android:id="@+id/textView_faq_body"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="FAQ title"
+        android:text=""
         android:fontFamily="@font/poppins"
         android:layout_marginTop="5dp"
         android:textSize="15dp"

@@ -1,7 +1,11 @@
 package com.university.chat.ui.adapter;
 
+import android.app.Activity;
+import android.app.ActivityOptions;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
+import android.os.Bundle;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextPaint;
@@ -30,6 +34,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.university.chat.R;
 import com.university.chat.data.model.ChatModel;
+import com.university.chat.ui.view.ChatFullImageDisplayActivity;
 import com.university.chat.ui.viewModel.GeneralChatViewModel;
 
 import java.util.Objects;
@@ -103,6 +108,24 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
             holder.cardViewReplyInfo.setVisibility(View.GONE);
         }
 
+        // open full image view display
+        holder.imageViewImageFullDisplay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (model.getImage() != null) {
+
+                }
+                Intent intent = new Intent(context, ChatFullImageDisplayActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putString("transitionName", "ChatImage" + holder.getAbsoluteAdapterPosition());
+                intent.putExtras(bundle);
+                intent.putExtra("image", model.getImage());
+                ActivityOptions options = ActivityOptions
+                        .makeSceneTransitionAnimation((Activity) context, holder.imageViewImageFullDisplay, "ChatImage" + holder.getAbsoluteAdapterPosition());
+                // start the new activity
+                context.startActivity(intent, options.toBundle());
+            }
+        });
 
 
 

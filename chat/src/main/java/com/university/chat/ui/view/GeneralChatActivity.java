@@ -603,6 +603,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         // the Adapter class itself
         recyclerViewAdapterChat = new RecyclerViewAdapterChat(options, GeneralChatActivity.this) {
 
+
             @Override
             protected void onBindViewHolder(@NonNull ChatViewHolderSent holder, int position, @NonNull ChatModel model) {
                 super.onBindViewHolder(holder, position, model);
@@ -672,7 +673,7 @@ public class GeneralChatActivity extends AppCompatActivity {
                 super.onDataChanged();
                 // Connecting Adapter class with the Recycler view
                 // Function to tell the app to start getting data from database
-                //recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
+               // TODO recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
                 // read recycler page position from shared preferences.
                 int recyclerPagePosition = sharedPref.getInt(groupKey, 0);
                 if (recyclerPagePosition != 0) {
