@@ -36,6 +36,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.university.chat.R;
+import com.university.chat.utility.RandomColors;
 import com.university.chat.utility.RecyclerViewItemDecoration;
 import com.university.chat.data.model.UserGroupModel;
 import com.university.chat.ui.adapter.UserGroupsRecyclerViewAdapter;
@@ -196,7 +197,7 @@ public class UserGroupsActivity extends AppCompatActivity {
     }
 
     // custom dialog for user to create profile.
-    private void customDialogProfile(){
+    private void customDialogCreateProfile(){
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         final View customLayout = getLayoutInflater().inflate(R.layout.create_profile_dialog, null);
@@ -248,6 +249,8 @@ public class UserGroupsActivity extends AppCompatActivity {
 
                 if (user != null) {
                     String uid, username, department;
+                    RandomColors randomColors = new RandomColors();
+                    int color = randomColors.getColor();
 
                     //get user details
                     username = autoCompleteTextViewUsername.getText().toString();
@@ -263,6 +266,7 @@ public class UserGroupsActivity extends AppCompatActivity {
                     map.put(getStringResource(R.string.department), department);
                     map.put(getStringResource(R.string.userBan), false);
                     map.put(getStringResource(R.string.userAdmin), false);
+                    map.put(getStringResource(R.string.usernameColor), color);
 
                     // write to firebase
                     myRef.child(uid).setValue(map);
@@ -407,7 +411,7 @@ public class UserGroupsActivity extends AppCompatActivity {
                 if (!snapshot.exists()){
                     // user doesn't exist, create profile.
                     // show profile custom dialog
-                    customDialogProfile();
+                    customDialogCreateProfile();
                 }
                 // retrieve current user username and update ui
                 if (snapshot.exists()){

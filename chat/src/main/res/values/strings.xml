@@ -33,6 +33,9 @@
 
     <string name="title">title</string>
     <string name="body">body</string>
+    <string name="usernameColor">usernameColor</string>
+    <string name="replyUsernameColor">replyUsernameColor</string>
+    <string name="replyUserAdmin">replyUserAdmin</string>
 
 
 </resources>

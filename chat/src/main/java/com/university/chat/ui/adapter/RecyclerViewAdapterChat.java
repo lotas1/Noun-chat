@@ -4,14 +4,7 @@ import android.app.Activity;
 import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.TextPaint;
-import android.text.method.LinkMovementMethod;
-import android.text.style.ClickableSpan;
-import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,7 +15,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
-import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelStoreOwner;
 import androidx.recyclerview.widget.RecyclerView;
@@ -68,12 +60,20 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
             //cardViewMarginParams.setMargins(100, 0, 0, 0);
             holder.linearParentLayoutSent.setGravity(Gravity.RIGHT);
             holder.cardView.setCardBackgroundColor(context.getResources().getColor(com.university.theme.R.color.Tea_Green));
-            holder.textViewUsernameSent.setVisibility(View.GONE);
+            // sending user cant see there username
+            holder.linearLayoutUsernameBadge.setVisibility(View.GONE);
         }else{
             //cardViewMarginParams.setMargins(0, 0, 100, 0);
             holder.linearParentLayoutSent.setGravity(Gravity.LEFT);
             holder.cardView.setCardBackgroundColor(context.getResources().getColor(com.university.theme.R.color.white));
-            holder.textViewUsernameSent.setVisibility(View.VISIBLE);
+            // user can see receiver username or badge.
+            holder.linearLayoutUsernameBadge.setVisibility(View.VISIBLE);
+        }
+
+        if (model.isUserAdmin()){
+            holder.imageViewBadge.setVisibility(View.VISIBLE);
+        }else {
+            holder.imageViewBadge.setVisibility(View.GONE);
         }
 
         if (model.getImage() != null){
@@ -85,7 +85,10 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
 
         if (model.getUsername() != null) {
             holder.textViewUsernameSent.setText("@".concat(model.getUsername()));
+            holder.textViewUsernameSent.setTextColor(model.getUsernameColor());
         }
+
+
 
         if (model.getMessage() != null){
             holder.textViewMessageSent.setText(model.getMessage());
@@ -98,7 +101,13 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
         if (model.getReplyMessage() != null) {
             holder.cardViewReplyInfo.setVisibility(View.VISIBLE);
             holder.textViewUsernameReply.setText(model.getReplyUsername());
+            holder.textViewUsernameReply.setTextColor(model.getReplyUsernameColor());
             holder.textViewMessageReply.setText(model.getReplyMessage());
+            if (model.isReplyUserAdmin()) {
+                holder.imageViewReplyBadge.setVisibility(View.VISIBLE);
+            }else {
+                holder.imageViewReplyBadge.setVisibility(View.GONE);
+            }
             // on click on user reply it scrolls to reply message position
             holder.cardViewReplyInfo.setOnClickListener(v -> {
                 // get reply message position
@@ -142,9 +151,9 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
 
     public class ChatViewHolderSent extends RecyclerView.ViewHolder{
         private TextView textViewUsernameSent, textViewMessageSent, textViewDateSent, textViewUsernameReply, textViewMessageReply;
-        private LinearLayout linearParentLayoutSent;
+        private LinearLayout linearParentLayoutSent, linearLayoutUsernameBadge;
         public CardView cardView, cardViewImageFullDisplay, cardViewReplyInfo;
-        private ImageView imageViewImageFullDisplay;
+        private ImageView imageViewImageFullDisplay, imageViewBadge, imageViewReplyBadge;
 
         public ChatViewHolderSent(@NonNull View itemView) {
             super(itemView);
@@ -159,6 +168,9 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
             cardViewReplyInfo = itemView.findViewById(R.id.cardView_replyInfo_chat);
             textViewUsernameReply = itemView.findViewById(R.id.textView_usernameReply_chat);
             textViewMessageReply = itemView.findViewById(R.id.textView_messageReply_chat);
+            linearLayoutUsernameBadge = itemView.findViewById(R.id.linearLayout_username_badge_chat);
+            imageViewBadge = itemView.findViewById(R.id.imageView_badge);
+            imageViewReplyBadge = itemView.findViewById(R.id.imageView_ReplyBadge);
 
             itemView.setClickable(true);
         }

@@ -79,13 +79,13 @@ public class GeneralChatActivity extends AppCompatActivity {
     int usersCount;
     private boolean isGroupMute;
     private static final int PICK_IMAGE = 100;
-    private boolean isChatImageSelected, isReplyChatSelected = false;
+    private boolean isChatImageSelected, replyUserAdmin, isReplyChatSelected = false;
     private Uri uriChatImage;
     private GeneralChatViewModel generalChatViewModel;
     private StorageReference storageRef, chatImageStorageRef;
     private FirebaseStorage storage;
     private UploadTask uploadTask;
-    private int replyPosition;//, pinMessagePosition = 0;
+    private int replyPosition, replyUsernameColor, usernameColor;//, pinMessagePosition = 0;
     private String pinMessagePosition;
     private ActionMode actionMode;
     private Map<String, Object> replyMap;
@@ -226,7 +226,7 @@ public class GeneralChatActivity extends AppCompatActivity {
             linearLayoutReplyMessageGeneralChat.setVisibility(View.GONE);
         });
 
-        // observer for reply message in chat
+        // observer for getting reply message info in chat
         generalChatViewModel.getUserReplyInfo().observe(this, new Observer<Map<String, Object>>() {
             @Override
             public void onChanged(Map<String, Object> map) {
@@ -403,12 +403,15 @@ public class GeneralChatActivity extends AppCompatActivity {
 
     private void selectedReplyMessage(Map<String, Object> map) {
         isReplyChatSelected = true;
-        replyUsername = (String) map.get("replyUsername");
-        replyMessage = (String) map.get("replyMessage");
-        replyPosition = (int) map.get("replyPosition");
+        replyUsername = (String) map.get(getStringResource(R.string.replyUsername));
+        replyMessage = (String) map.get(getStringResource(R.string.replyMessage));
+        replyPosition = (int) map.get(getStringResource(R.string.replyPosition));
+        replyUsernameColor = (int) map.get(getStringResource(R.string.replyUsernameColor));
+        replyUserAdmin = (boolean) map.get(getStringResource(R.string.replyUserAdmin));
         // set reply layout visibility VISIBLE
         linearLayoutReplyMessageGeneralChat.setVisibility(View.VISIBLE);
         textViewUsernameReply.setText(replyUsername);
+        textViewUsernameReply.setTextColor(replyUsernameColor);
         textViewMessageReply.setText(replyMessage);
     }
 
@@ -507,11 +510,15 @@ public class GeneralChatActivity extends AppCompatActivity {
                     map.put(getStringResource(R.string.time), getDate());
                     map.put(getStringResource(R.string.userId), uid);
                     map.put(getStringResource(R.string.key), key);
+                    map.put(getStringResource(R.string.usernameColor), usernameColor);
                     map.put(getStringResource(R.string.image), downloadUri.toString());
+                    map.put(getStringResource(R.string.userAdmin), isUserAdmin);
                     if (isReplyChatSelected) {
                         map.put(getStringResource(R.string.replyUsername), replyUsername);
                         map.put(getStringResource(R.string.replyMessage), replyMessage);
                         map.put(getStringResource(R.string.replyPosition), replyPosition);
+                        map.put(getStringResource(R.string.replyUsernameColor), replyUsernameColor);
+                        map.put(getStringResource(R.string.replyUserAdmin), replyUserAdmin);
                     }
                     assert key != null;
                     chatRef.child(groupKey).child(key).setValue(map).addOnSuccessListener(unused -> {
@@ -558,10 +565,14 @@ public class GeneralChatActivity extends AppCompatActivity {
         map.put(getStringResource(R.string.time), getDate());
         map.put(getStringResource(R.string.userId), uid);
         map.put(getStringResource(R.string.key), key);
+        map.put(getStringResource(R.string.userAdmin), isUserAdmin);
+        map.put(getStringResource(R.string.usernameColor), usernameColor);
         if (isReplyChatSelected) {
             map.put(getStringResource(R.string.replyUsername), replyUsername);
             map.put(getStringResource(R.string.replyMessage), replyMessage);
             map.put(getStringResource(R.string.replyPosition), replyPosition);
+            map.put(getStringResource(R.string.replyUsernameColor), replyUsernameColor);
+            map.put(getStringResource(R.string.replyUserAdmin), replyUserAdmin);
         }
         assert key != null;
         chatRef.child(groupKey).child(key).setValue(map)
@@ -643,7 +654,7 @@ public class GeneralChatActivity extends AppCompatActivity {
                     // get message text for copy
                     textToCopy = model.getMessage();
                     // get user message info a user wants to reply to.
-                    generalChatViewModel.setUserReplyInfo(model.getUsername(), model.getMessage(), holder.getLayoutPosition());
+                    generalChatViewModel.setUserReplyInfo(model.getUsername(), model.getMessage(), holder.getLayoutPosition(), model.getUsernameColor(), model.isUserAdmin());
                     notifyDataSetChanged();
                     return false;
                 });
@@ -734,11 +745,15 @@ public class GeneralChatActivity extends AppCompatActivity {
             }
         });
 
-        userRef.child(user.getUid()).child(getStringResource(R.string.username)).addValueEventListener(new ValueEventListener() {
+        userRef.child(user.getUid()).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    username = snapshot.getValue().toString();
+                if (snapshot.child(getStringResource(R.string.username)).exists()) {
+                    username = snapshot.child(getStringResource(R.string.username)).getValue().toString();
+                }
+
+                if (snapshot.child(getStringResource(R.string.usernameColor)).exists()) {
+                    usernameColor = Integer.parseInt(snapshot.child(getStringResource(R.string.usernameColor)).getValue().toString());
                 }
             }
 

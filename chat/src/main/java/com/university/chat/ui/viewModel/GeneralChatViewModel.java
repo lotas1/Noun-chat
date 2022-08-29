@@ -23,11 +23,13 @@ public class GeneralChatViewModel extends ViewModel {
         return mutableLiveDataGroupImageUri;
     }
 
-    public void setUserReplyInfo(String username, String message, int position){
+    public void setUserReplyInfo(String username, String message, int position, int color, boolean isUserAdmin){
         Map<String, Object> map = new HashMap<>();
         map.put("replyUsername", username);
+        map.put("replyUsernameColor", color);
         map.put("replyMessage", message);
         map.put("replyPosition", position);
+        map.put("replyUserAdmin", isUserAdmin);
         singleLiveEventReplyMessage.setValue(map);
     }
 

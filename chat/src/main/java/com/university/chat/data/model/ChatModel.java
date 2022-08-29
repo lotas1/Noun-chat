@@ -2,7 +2,8 @@ package com.university.chat.data.model;
 
 public class ChatModel {
     private String username, message, time, userId, image, replyMessage, replyUsername, key;
-    private int replyPosition;
+    private int replyPosition, usernameColor, replyUsernameColor;
+    private boolean userAdmin, replyUserAdmin;
 
     public String getUsername() {
         return username;
@@ -74,5 +75,37 @@ public class ChatModel {
 
     public void setKey(String key) {
         this.key = key;
+    }
+
+    public int getUsernameColor() {
+        return usernameColor;
+    }
+
+    public void setUsernameColor(int usernameColor) {
+        this.usernameColor = usernameColor;
+    }
+
+    public int getReplyUsernameColor() {
+        return replyUsernameColor;
+    }
+
+    public void setReplyUsernameColor(int replyUsernameColor) {
+        this.replyUsernameColor = replyUsernameColor;
+    }
+
+    public boolean isUserAdmin() {
+        return userAdmin;
+    }
+
+    public void setUserAdmin(boolean userAdmin) {
+        this.userAdmin = userAdmin;
+    }
+
+    public boolean isReplyUserAdmin() {
+        return replyUserAdmin;
+    }
+
+    public void setReplyUserAdmin(boolean replyUserAdmin) {
+        this.replyUserAdmin = replyUserAdmin;
     }
 }
