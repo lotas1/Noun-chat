@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -150,6 +151,7 @@ public class UserGroupsActivity extends AppCompatActivity {
         recyclerViewUserGroups.setLayoutManager(layoutManager);
 
         // default divider line for recycler view.
+        //recyclerViewUserGroups.addItemDecoration(new DividerItemDecoration(UserGroupsActivity.this, DividerItemDecoration.VERTICAL));
         recyclerViewUserGroups.addItemDecoration(new RecyclerViewItemDecoration(ContextCompat.getDrawable(UserGroupsActivity.this, R.drawable.divider)));
         // firebase location path
         queryUserGroup = FirebaseDatabase.getInstance().getReference("Groups");

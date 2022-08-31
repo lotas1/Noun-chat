@@ -98,24 +98,7 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
             holder.textViewDateSent.setText(model.getTime());
         }
 
-        if (model.getReplyMessage() != null) {
-            holder.cardViewReplyInfo.setVisibility(View.VISIBLE);
-            holder.textViewUsernameReply.setText(model.getReplyUsername());
-            holder.textViewUsernameReply.setTextColor(model.getReplyUsernameColor());
-            holder.textViewMessageReply.setText(model.getReplyMessage());
-            if (model.isReplyUserAdmin()) {
-                holder.imageViewReplyBadge.setVisibility(View.VISIBLE);
-            }else {
-                holder.imageViewReplyBadge.setVisibility(View.GONE);
-            }
-            // on click on user reply it scrolls to reply message position
-            holder.cardViewReplyInfo.setOnClickListener(v -> {
-                // get reply message position
-                generalChatViewModel.setReplyPosition(model.getReplyPosition());
-            });
-        }else {
-            holder.cardViewReplyInfo.setVisibility(View.GONE);
-        }
+
 
         // open full image view display
         holder.imageViewImageFullDisplay.setOnClickListener(new View.OnClickListener() {
@@ -150,10 +133,12 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
     }
 
     public class ChatViewHolderSent extends RecyclerView.ViewHolder{
-        private TextView textViewUsernameSent, textViewMessageSent, textViewDateSent, textViewUsernameReply, textViewMessageReply;
+        private TextView textViewUsernameSent, textViewMessageSent, textViewDateSent;
+        public TextView textViewUsernameReply, textViewMessageReply;
         private LinearLayout linearParentLayoutSent, linearLayoutUsernameBadge;
         public CardView cardView, cardViewImageFullDisplay, cardViewReplyInfo;
-        private ImageView imageViewImageFullDisplay, imageViewBadge, imageViewReplyBadge;
+        private ImageView imageViewImageFullDisplay, imageViewBadge;
+        public ImageView imageViewReplyBadge;
 
         public ChatViewHolderSent(@NonNull View itemView) {
             super(itemView);

@@ -24,7 +24,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -34,7 +33,6 @@ import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -72,12 +70,12 @@ public class GeneralChatActivity extends AppCompatActivity {
     private RecyclerView recyclerViewChatData;
     private RecyclerViewAdapterChat recyclerViewAdapterChat;
     private MenuItem item1;
-    private Query queryBan, queryUser, queryChatMessages;
+    private Query queryUser, queryChatMessages;
     private FirebaseUser user;
     private FirebaseDatabase database;
     private DatabaseReference groupRef, userRef, chatRef;
     boolean isUserBan, isUserAdmin;
-    private String groupName, groupKey, groupImage, username, replyUsername, replyMessage, messageKey, textToCopy, messageUserId, chatImage, highlightedMessage;
+    private String groupName, groupKey, groupImage, username, replyUsername, replyMessage, replyMessageKey, messageKey, textToCopy, messageUserId, chatImage, highlightedMessage;
 
     int usersCount;
     private boolean isGroupMute;
@@ -88,15 +86,14 @@ public class GeneralChatActivity extends AppCompatActivity {
     private StorageReference storageRef, chatImageStorageRef;
     private FirebaseStorage storage;
     private UploadTask uploadTask;
-    private int replyPosition, replyUsernameColor, usernameColor;//, pinMessagePosition = 0;
+    private int replyUsernameColor, usernameColor;//, pinMessagePosition = 0;
     private String pinMessageKey;
     private ActionMode actionMode;
-    private Map<String, Object> replyMap;
-    private int pinMessagePosition, highlightedPosition = -10;
+    private int messagePositionToScrollTo, replyMessagePosition, highlightedPosition = -10;
     private SharedPreferences sharedPref;
     private SharedPreferences.Editor editor;
 
-    private boolean clickedPinnedMessage = false;
+    private boolean clickedPinnedOrReplyMessage = false;
     private ArrayList<String> chatPushKeyArray;
 
 
@@ -226,20 +223,12 @@ public class GeneralChatActivity extends AppCompatActivity {
         // init onCreate
         init(GeneralChatActivity.this);
 
-        /** close reply chat if not needed again by the user**/
+        // close reply chat if not needed again by the user
         imageButtonCloseReplyChat.setOnClickListener(v -> {
             isReplyChatSelected = false;
             linearLayoutReplyMessageGeneralChat.setVisibility(View.GONE);
         });
 
-        // observer for getting reply message info in chat
-        generalChatViewModel.getUserReplyInfo().observe(this, new Observer<Map<String, Object>>() {
-            @Override
-            public void onChanged(Map<String, Object> map) {
-                replyMap = map;
-                actionMode = startSupportActionMode(actionModeCallback);
-            }
-        });
 
         // observer for getting replied message position
         generalChatViewModel.getReplyPositionLiveData().observe(this, new Observer<Integer>() {
@@ -265,7 +254,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         // onclick sends sends user message to realtime firebase
         imageButtonSendUserData.setOnClickListener(v -> {
             if (TextUtils.isEmpty(editTextUserMessage.getText())) {
-                Toast.makeText(this, String.valueOf(clickedPinnedMessage), Toast.LENGTH_SHORT).show();
+
             } else {
                 if (user != null) {
                     String message = editTextUserMessage.getText().toString();
@@ -288,7 +277,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         });
 
         // scroll down to last position of recycler view
-        imageButtonScrollDown.setOnClickListener(v -> recyclerViewChatData.smoothScrollToPosition(recyclerViewChatData.getAdapter().getItemCount()-1));
+        imageButtonScrollDown.setOnClickListener(v -> recyclerViewChatData.smoothScrollToPosition(Objects.requireNonNull(recyclerViewChatData.getAdapter()).getItemCount()-1));
 
     }
 
@@ -326,7 +315,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             if (item.getItemId() == R.id.reply) {
                 // updates ui with the selected reply message
-                selectedReplyMessage(replyMap);
+                selectedReplyMessage();
                 // reset highlighted position to remove highlight from row.
                 highlightedPosition = -10;
                 recyclerViewAdapterChat.notifyDataSetChanged();
@@ -395,7 +384,7 @@ public class GeneralChatActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         // get current position of recycler view
-        int pagePosition = ((LinearLayoutManager) recyclerViewChatData.getLayoutManager()).findLastCompletelyVisibleItemPosition();
+        int pagePosition = ((LinearLayoutManager) Objects.requireNonNull(recyclerViewChatData.getLayoutManager())).findLastCompletelyVisibleItemPosition();
         //store position locally in shared preferences.
         editor.putInt(groupKey, pagePosition);
         editor.apply();
@@ -407,14 +396,19 @@ public class GeneralChatActivity extends AppCompatActivity {
         recyclerViewAdapterChat.stopListening();
     }
 
-    private void selectedReplyMessage(Map<String, Object> map) {
-        isReplyChatSelected = true;
-        replyUsername = (String) map.get(getStringResource(R.string.replyUsername));
-        replyMessage = (String) map.get(getStringResource(R.string.replyMessage));
-        replyPosition = (int) map.get(getStringResource(R.string.replyPosition));
-        replyUsernameColor = (int) map.get(getStringResource(R.string.replyUsernameColor));
-        replyUserAdmin = (boolean) map.get(getStringResource(R.string.replyUserAdmin));
-        // set reply layout visibility VISIBLE
+    private void selectedReplyMessage() {
+        // observer for getting reply message info data.
+        generalChatViewModel.getUserReplyInfo().observe(this, map -> {
+            // notify that user selected a message to reply.
+            isReplyChatSelected = true;
+            // gets user selected message for reply, to send alongside a message to firebase
+            replyUsername = (String) map.get(getStringResource(R.string.replyUsername));
+            replyMessage = (String) map.get(getStringResource(R.string.replyMessage));
+            replyUsernameColor = (int) Objects.requireNonNull(map.get(getStringResource(R.string.replyUsernameColor)));
+            replyUserAdmin = (boolean) Objects.requireNonNull(map.get(getStringResource(R.string.replyUserAdmin)));
+            replyMessageKey = (String) map.get(getStringResource(R.string.replyMessageKey));
+        });
+        // set reply layout visibility VISIBLE, when wants to chat a reply message
         linearLayoutReplyMessageGeneralChat.setVisibility(View.VISIBLE);
         textViewUsernameReply.setText(replyUsername);
         textViewUsernameReply.setTextColor(replyUsernameColor);
@@ -516,7 +510,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         }).addOnSuccessListener(taskSnapshot -> {
             Task<Uri> urlTask = uploadTask.continueWithTask(task -> {
                 if (!task.isSuccessful()) {
-                    throw task.getException();
+                    throw Objects.requireNonNull(task.getException());
                 }
 
                 // Continue with the task to get the download URL
@@ -542,9 +536,9 @@ public class GeneralChatActivity extends AppCompatActivity {
                     if (isReplyChatSelected) {
                         map.put(getStringResource(R.string.replyUsername), replyUsername);
                         map.put(getStringResource(R.string.replyMessage), replyMessage);
-                        map.put(getStringResource(R.string.replyPosition), replyPosition);
                         map.put(getStringResource(R.string.replyUsernameColor), replyUsernameColor);
                         map.put(getStringResource(R.string.replyUserAdmin), replyUserAdmin);
+                        map.put(getStringResource(R.string.replyMessageKey), replyMessageKey);
                     }
                     assert key != null;
                     chatRef.child(groupKey).child(key).setValue(map).addOnSuccessListener(unused -> {
@@ -567,7 +561,6 @@ public class GeneralChatActivity extends AppCompatActivity {
                     isReplyChatSelected = false;
                     replyUsername = null;
                     replyMessage = null;
-                    replyPosition = 0;
                     // dismiss progress bar
                     progressBar.dismiss();
 
@@ -596,9 +589,9 @@ public class GeneralChatActivity extends AppCompatActivity {
         if (isReplyChatSelected) {
             map.put(getStringResource(R.string.replyUsername), replyUsername);
             map.put(getStringResource(R.string.replyMessage), replyMessage);
-            map.put(getStringResource(R.string.replyPosition), replyPosition);
             map.put(getStringResource(R.string.replyUsernameColor), replyUsernameColor);
             map.put(getStringResource(R.string.replyUserAdmin), replyUserAdmin);
+            map.put(getStringResource(R.string.replyMessageKey), replyMessageKey);
         }
         assert key != null;
         chatRef.child(groupKey).child(key).setValue(map)
@@ -619,7 +612,6 @@ public class GeneralChatActivity extends AppCompatActivity {
         isReplyChatSelected = false;
         replyUsername = null;
         replyMessage = null;
-        replyPosition = 0;
     }
 
     private void chatRecyclerView(Context context) {
@@ -679,7 +671,9 @@ public class GeneralChatActivity extends AppCompatActivity {
                     // get message text for copy
                     textToCopy = model.getMessage();
                     // get user message info a user wants to reply to.
-                    generalChatViewModel.setUserReplyInfo(model.getUsername(), model.getMessage(), holder.getLayoutPosition(), model.getUsernameColor(), model.isUserAdmin());
+                    generalChatViewModel.setUserReplyInfo(model.getUsername(), model.getMessage(), holder.getLayoutPosition(), model.getUsernameColor(), model.isUserAdmin(), model.getKey());
+                    // display contextual app bar when long click in item view.
+                    actionMode = startSupportActionMode(actionModeCallback);
                     notifyDataSetChanged();
                     return false;
                 });
@@ -704,12 +698,13 @@ public class GeneralChatActivity extends AppCompatActivity {
                 }
 
                 // checks if user clicked pin message before highlighting the position for few seconds
-                if (clickedPinnedMessage) {
+                if (clickedPinnedOrReplyMessage) {
                     // checks if value is not a negative value, before highlighting.
-                    if (pinMessagePosition >= 0) {
+                    if (messagePositionToScrollTo >= 0) {
                         // highlight the pinned message position when clicked.
-                        if (pinMessagePosition == position){
+                        if (messagePositionToScrollTo == position){
                             holder.itemView.setBackgroundColor(context.getResources().getColor(com.university.theme.R.color.dark_grey));
+                            // highlight message position for few second to help user identify the selected message using timer.
                             Timer timer = new Timer();
                             TimerTask timerTask = new TimerTask() {
                                 @Override
@@ -719,12 +714,30 @@ public class GeneralChatActivity extends AppCompatActivity {
                                     context.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, true);
                                     holder.itemView.setBackgroundResource(outValue.resourceId);
                                     // set to false, indicating user did not clicked again.
-                                    clickedPinnedMessage = false;
+                                    clickedPinnedOrReplyMessage = false;
                                 }
                             };
-                            timer.scheduleAtFixedRate(timerTask,1000,1000);
+                            timer.scheduleAtFixedRate(timerTask,1000,4000);
                         }
                     }
+                }
+                if (model.getReplyMessage() != null) {
+                    holder.cardViewReplyInfo.setVisibility(View.VISIBLE);
+                    holder.textViewUsernameReply.setText(model.getReplyUsername());
+                    holder.textViewUsernameReply.setTextColor(model.getReplyUsernameColor());
+                    holder.textViewMessageReply.setText(model.getReplyMessage());
+                    if (model.isReplyUserAdmin()) {
+                        holder.imageViewReplyBadge.setVisibility(View.VISIBLE);
+                    }else {
+                        holder.imageViewReplyBadge.setVisibility(View.GONE);
+                    }
+                    // on click on user reply it scrolls to reply message position
+                    holder.cardViewReplyInfo.setOnClickListener(v -> {
+                        // scroll to and highlight position to notify user about the message
+                        scroll$HighlightMessagePosition(context, model.getReplyMessageKey(), "Reply message has been deleted");
+                    });
+                }else {
+                    holder.cardViewReplyInfo.setVisibility(View.GONE);
                 }
             }
 
@@ -755,26 +768,27 @@ public class GeneralChatActivity extends AppCompatActivity {
 
     }
 
+    private void scroll$HighlightMessagePosition(Context context, String messageToScrollTo, String toastMessage){
+        // retrieves pin message position from the array containing all user chat push key
+        messagePositionToScrollTo = chatPushKeyArray.indexOf(messageToScrollTo);
+        // check if pin message still exist before updating user
+        if (messagePositionToScrollTo < 0){
+            Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show();
+        }else {
+            recyclerViewChatData.smoothScrollToPosition(messagePositionToScrollTo);
+            // notify that user clicked pin message, so that the pin position message could be highlighted
+            clickedPinnedOrReplyMessage = true;
+            recyclerViewAdapterChat.notifyDataSetChanged();
+        }
+    }
     private void init(Context context) {
         // set visibility for pin message gone on start of application
         //linearLayoutPinMessageParentLayout.setVisibility(View.GONE);
         // on click on pin message recycler view scrolls to the pin message position
-        linearLayoutPinMessageParentLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // retrieves pin message position from the array containing all user chat push key
-                pinMessagePosition = chatPushKeyArray.indexOf(pinMessageKey);
-                // check if pin message still exist before updating user
-                if (pinMessagePosition < 0){
-                    Toast.makeText(context, "Pin message has been deleted", Toast.LENGTH_SHORT).show();
-                }else {
-                    recyclerViewChatData.smoothScrollToPosition(pinMessagePosition);
-                    // notify that user clicked pin message, so that the pin position message could be highlighted
-                    clickedPinnedMessage = true;
-                    recyclerViewAdapterChat.notifyDataSetChanged();
-                }
+        linearLayoutPinMessageParentLayout.setOnClickListener(v -> {
+            // scroll to and highlight position to notify user about the message
+            scroll$HighlightMessagePosition(context, pinMessageKey, "Pin message has been deleted");
 
-            }
         });
         // read pin message from firebase
         readPinMessage();
@@ -788,13 +802,13 @@ public class GeneralChatActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 // get group mute status
                 if (snapshot.child(getStringResource(R.string.adminOnly)).exists()) {
-                    isGroupMute = (boolean) snapshot.child(getStringResource(R.string.adminOnly)).getValue();
+                    isGroupMute = (boolean) Objects.requireNonNull(snapshot.child(getStringResource(R.string.adminOnly)).getValue());
                     // checks isGroupMute and update user messaging ui.
                     checkIsGroupAdminOnly(isGroupMute);
                 }
                 // get group image string url (if any)
                 if (snapshot.child(getStringResource(R.string.groupImage)).exists()) {
-                    groupImage = snapshot.child(getStringResource(R.string.groupImage)).getValue().toString();
+                    groupImage = Objects.requireNonNull(snapshot.child(getStringResource(R.string.groupImage)).getValue()).toString();
                 }
 
             }
@@ -809,11 +823,11 @@ public class GeneralChatActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 if (snapshot.child(getStringResource(R.string.username)).exists()) {
-                    username = snapshot.child(getStringResource(R.string.username)).getValue().toString();
+                    username = Objects.requireNonNull(snapshot.child(getStringResource(R.string.username)).getValue()).toString();
                 }
 
                 if (snapshot.child(getStringResource(R.string.usernameColor)).exists()) {
-                    usernameColor = Integer.parseInt(snapshot.child(getStringResource(R.string.usernameColor)).getValue().toString());
+                    usernameColor = Integer.parseInt(Objects.requireNonNull(snapshot.child(getStringResource(R.string.usernameColor)).getValue()).toString());
                 }
             }
 
@@ -895,11 +909,11 @@ public class GeneralChatActivity extends AppCompatActivity {
         queryUser.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                String groupName = snapshot.child(groupKey).child(getStringResource(R.string.groupName)).getValue().toString();
+                String groupName = Objects.requireNonNull(snapshot.child(groupKey).child(getStringResource(R.string.groupName)).getValue()).toString();
                 textViewGroupName.setText(groupName);
                 if (snapshot.child(groupKey).child(getStringResource(R.string.groupInfo)).exists()) {
                     // get group info or description from database and update user ui.
-                    String groupInfo = snapshot.child(groupKey).child(getStringResource(R.string.groupInfo)).getValue().toString();
+                    String groupInfo = Objects.requireNonNull(snapshot.child(groupKey).child(getStringResource(R.string.groupInfo)).getValue()).toString();
                     textViewGroupInfoMessage.setText(groupInfo);
                 }
 
@@ -1003,24 +1017,9 @@ public class GeneralChatActivity extends AppCompatActivity {
     }
 
     private void setClipboard(Context context, String text) {
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.HONEYCOMB) {
-            android.text.ClipboardManager clipboard = (android.text.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-            clipboard.setText(text);
-        } else {
-            android.content.ClipboardManager clipboard = (android.content.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-            android.content.ClipData clip = android.content.ClipData.newPlainText("Copied Text", text);
-            clipboard.setPrimaryClip(clip);
-        }
-    }
-
-    // clears textInput layout error
-    private void clearError(AutoCompleteTextView autoCompleteTextView, TextInputLayout textInputLayout) {
-        autoCompleteTextView.setOnClickListener(v -> textInputLayout.setError(null));
-    }
-
-    // checks if autocomplete text view is empty.
-    private boolean isEmpty(AutoCompleteTextView autoCompleteTextView) {
-        return TextUtils.isEmpty(autoCompleteTextView.getEditableText());
+        android.content.ClipboardManager clipboard = (android.content.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+        android.content.ClipData clip = android.content.ClipData.newPlainText("Copied Text", text);
+        clipboard.setPrimaryClip(clip);
     }
 
     // return date in string.
