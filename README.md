@@ -9,3 +9,4 @@
 * Pinning messages
 * Saving last user chat position for returning time(just like telegram).
 * Deleting chat message.
+* Added badge for admin

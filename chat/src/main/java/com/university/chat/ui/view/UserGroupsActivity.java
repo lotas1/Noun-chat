@@ -120,17 +120,7 @@ public class UserGroupsActivity extends AppCompatActivity {
 
         // toolbar menu navigation
         toolbar.setOnMenuItemClickListener(item -> {
-            if (item.getItemId() == R.id.new_group){
-                // check if user is admin
-                if (isUserAdmin){
-                    // navigate to view for creating group.
-                    Intent intent = new Intent(UserGroupsActivity.this, NewGroupActivity.class);
-                    startActivity(intent);
-                }else {
-                    // notify user not admin
-                    showAlertDialog(UserGroupsActivity.this, "Admin Feature", "Only admin can access this features.");
-                }
-            }else if (item.getItemId() == R.id.profile) {
+            if (item.getItemId() == R.id.profile) {
                 // show user profile
                 customDialogMyProfile();
             } else if (item.getItemId() == R.id.logOut) {

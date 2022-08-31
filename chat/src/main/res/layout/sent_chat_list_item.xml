@@ -47,8 +47,8 @@
 
                 <ImageView
                     android:id="@+id/imageView_badge"
-                    android:layout_width="25dp"
-                    android:layout_height="25dp"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
                     android:src="@drawable/admin_badge"/>
 
             </LinearLayout>
@@ -87,8 +87,8 @@
                             android:textStyle="bold" />
                         <ImageView
                             android:id="@+id/imageView_ReplyBadge"
-                            android:layout_width="25dp"
-                            android:layout_height="25dp"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
                             android:src="@drawable/admin_badge"/>
 
 

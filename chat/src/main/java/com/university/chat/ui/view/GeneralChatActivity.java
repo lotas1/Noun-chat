@@ -52,10 +52,13 @@ import com.university.chat.ui.adapter.RecyclerViewAdapterChat;
 import com.university.chat.ui.viewModel.GeneralChatViewModel;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class GeneralChatActivity extends AppCompatActivity {
     private Toolbar toolbar;
@@ -86,12 +89,15 @@ public class GeneralChatActivity extends AppCompatActivity {
     private FirebaseStorage storage;
     private UploadTask uploadTask;
     private int replyPosition, replyUsernameColor, usernameColor;//, pinMessagePosition = 0;
-    private String pinMessagePosition;
+    private String pinMessageKey;
     private ActionMode actionMode;
     private Map<String, Object> replyMap;
-    private int highlightedPosition = -10;
+    private int pinMessagePosition, highlightedPosition = -10;
     private SharedPreferences sharedPref;
     private SharedPreferences.Editor editor;
+
+    private boolean clickedPinnedMessage = false;
+    private ArrayList<String> chatPushKeyArray;
 
 
     @Override
@@ -259,7 +265,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         // onclick sends sends user message to realtime firebase
         imageButtonSendUserData.setOnClickListener(v -> {
             if (TextUtils.isEmpty(editTextUserMessage.getText())) {
-
+                Toast.makeText(this, String.valueOf(clickedPinnedMessage), Toast.LENGTH_SHORT).show();
             } else {
                 if (user != null) {
                     String message = editTextUserMessage.getText().toString();
@@ -417,9 +423,13 @@ public class GeneralChatActivity extends AppCompatActivity {
 
     private void pinMessage(String message) {
         groupRef.child(groupKey).child(getStringResource(R.string.pinMessage)).setValue(message);
-        groupRef.child(groupKey).child(getStringResource(R.string.pinMessagePosition)).setValue(highlightedPosition);
+        groupRef.child(groupKey).child(getStringResource(R.string.pinMessageKey)).setValue(messageKey);
     }
-
+    private void deletePinMessage() {
+        groupRef.child(groupKey).child(getStringResource(R.string.pinMessage)).removeValue();
+        groupRef.child(groupKey).child(getStringResource(R.string.pinMessageKey)).removeValue();
+    }
+    // gets pin message and updates ui.
     private void readPinMessage() {
         groupRef.child(groupKey).addValueEventListener(new ValueEventListener() {
             @Override
@@ -428,7 +438,9 @@ public class GeneralChatActivity extends AppCompatActivity {
                     // set visible the parent layout for pin message.
                     linearLayoutPinMessageParentLayout.setVisibility(View.VISIBLE);
                     // get pin message info.
-                    pinMessagePosition = String.valueOf(snapshot.child(getStringResource(R.string.pinMessagePosition)).getValue());
+                    //pinMessagePosition = String.valueOf(snapshot.child(getStringResource(R.string.pinMessagePosition)).getValue());
+                    pinMessageKey = String.valueOf(snapshot.child(getStringResource(R.string.pinMessageKey)).getValue());
+
                     String pinMessage = Objects.requireNonNull(snapshot.child(getStringResource(R.string.pinMessage)).getValue()).toString();
                     // update pin message info to ui
                     textViewPinMessage.setText(pinMessage);
@@ -443,14 +455,28 @@ public class GeneralChatActivity extends AppCompatActivity {
 
             }
         });
+        // get all chat push key and store in an array.
+        // for been able to get the pin message position
+        chatRef.child(groupKey).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                // create instance of chat data push key
+                chatPushKeyArray = new ArrayList<>();
+                for (DataSnapshot dataSnapshot: snapshot.getChildren()){
+                    chatPushKeyArray.add(Objects.requireNonNull(dataSnapshot.child(getStringResource(R.string.key)).getValue()).toString());
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
         // delete pin message
         imageViewDeletePinMessage.setOnClickListener(v -> deletePinMessage());
     }
 
-    private void deletePinMessage() {
-        groupRef.child(groupKey).child(getStringResource(R.string.pinMessage)).removeValue();
-        groupRef.child(groupKey).child(getStringResource(R.string.pinMessagePosition)).removeValue();
-    }
 
     private void deleteSelectedMessage(String chatImage) {
         // create instance of firebase database & database reference.
@@ -627,11 +653,10 @@ public class GeneralChatActivity extends AppCompatActivity {
                         highlightedPosition = -10;
                         notifyDataSetChanged();
                     }
-
                 });
+
                 // on long click on item view.
                 holder.itemView.setOnLongClickListener(v -> {
-
                     // remove any previous contextual action bar created for highlighted position.
                     if (highlightedPosition >= 0) {
                         // close contextual action bar
@@ -677,6 +702,30 @@ public class GeneralChatActivity extends AppCompatActivity {
                         holder.cardViewReplyInfo.setClickable(false);
                     }
                 }
+
+                // checks if user clicked pin message before highlighting the position for few seconds
+                if (clickedPinnedMessage) {
+                    // checks if value is not a negative value, before highlighting.
+                    if (pinMessagePosition >= 0) {
+                        // highlight the pinned message position when clicked.
+                        if (pinMessagePosition == position){
+                            holder.itemView.setBackgroundColor(context.getResources().getColor(com.university.theme.R.color.dark_grey));
+                            Timer timer = new Timer();
+                            TimerTask timerTask = new TimerTask() {
+                                @Override
+                                public void run() {
+                                    // set highlighted row background to selectableItemBackground
+                                    TypedValue outValue = new TypedValue();
+                                    context.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, true);
+                                    holder.itemView.setBackgroundResource(outValue.resourceId);
+                                    // set to false, indicating user did not clicked again.
+                                    clickedPinnedMessage = false;
+                                }
+                            };
+                            timer.scheduleAtFixedRate(timerTask,1000,1000);
+                        }
+                    }
+                }
             }
 
             @Override
@@ -713,7 +762,18 @@ public class GeneralChatActivity extends AppCompatActivity {
         linearLayoutPinMessageParentLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                recyclerViewChatData.smoothScrollToPosition(Integer.parseInt(pinMessagePosition));
+                // retrieves pin message position from the array containing all user chat push key
+                pinMessagePosition = chatPushKeyArray.indexOf(pinMessageKey);
+                // check if pin message still exist before updating user
+                if (pinMessagePosition < 0){
+                    Toast.makeText(context, "Pin message has been deleted", Toast.LENGTH_SHORT).show();
+                }else {
+                    recyclerViewChatData.smoothScrollToPosition(pinMessagePosition);
+                    // notify that user clicked pin message, so that the pin position message could be highlighted
+                    clickedPinnedMessage = true;
+                    recyclerViewAdapterChat.notifyDataSetChanged();
+                }
+
             }
         });
         // read pin message from firebase

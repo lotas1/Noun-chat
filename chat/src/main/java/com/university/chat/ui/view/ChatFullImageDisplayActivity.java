@@ -36,14 +36,17 @@ public class ChatFullImageDisplayActivity extends AppCompatActivity {
 
         // save image to device on click
         buttonSaveImage.setOnClickListener(view -> {
-            //convert the ImageView where you have the image to bitmap
-            BitmapDrawable drawable = (BitmapDrawable) imageView.getDrawable();
-            Bitmap bitmap = drawable.getBitmap();
-
             // save image to device
-            MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, "title" , "description");
-            // updates user.
-            Toast.makeText(ChatFullImageDisplayActivity.this, "Saved Successfully", Toast.LENGTH_SHORT).show();
+            if (imageView.getDrawable() == null){
+                Toast.makeText(this, "Image doesn't exist", Toast.LENGTH_SHORT).show();
+            }else {
+                //convert the ImageView where you have the image to bitmap
+                BitmapDrawable drawable = (BitmapDrawable) imageView.getDrawable();
+                Bitmap bitmap = drawable.getBitmap();
+                MediaStore.Images.Media.insertImage(getContentResolver(), bitmap, "title" , "description");
+                // updates user.
+                Toast.makeText(ChatFullImageDisplayActivity.this, "Saved Successfully", Toast.LENGTH_SHORT).show();
+            }
         });
 
 
