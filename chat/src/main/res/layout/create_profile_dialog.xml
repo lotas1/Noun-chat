@@ -33,6 +33,7 @@
             android:layout_height="match_parent"
             android:textSize="15dp"
             android:inputType="text"
+            android:maxLines="1"
             android:hint="@string/signUpUsername"/>
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -50,7 +51,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:hint="@string/Department"
-            android:inputType="none"
+            android:inputType="text"
+            android:maxLines="1"
             android:textSize="15dp" />
     </com.google.android.material.textfield.TextInputLayout>
 

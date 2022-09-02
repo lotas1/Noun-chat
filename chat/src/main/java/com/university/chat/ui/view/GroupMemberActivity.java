@@ -2,14 +2,20 @@ package com.university.chat.ui.view;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.MenuItemCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.app.AlertDialog;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.database.DataSnapshot;
@@ -33,6 +39,7 @@ public class GroupMemberActivity extends AppCompatActivity {
     private DatabaseReference databaseReferenceBan, databaseReferenceUserProfile;
     private ArrayList<String> usersArrayList;
     private Toolbar toolbar;
+    private android.widget.SearchView simpleSearchView;
 
 
     @Override
@@ -45,8 +52,55 @@ public class GroupMemberActivity extends AppCompatActivity {
         // instantiate view
         recyclerView = findViewById(R.id.recyclerView_group_members);
         toolbar = findViewById(R.id.toolbar_members);
+        simpleSearchView = findViewById(R.id.simpleSearchView);
         // close activity on click
         toolbar.setNavigationOnClickListener(v -> finish());
+
+        simpleSearchView.setOnQueryTextListener(new android.widget.SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                if (query.equals("")) {
+                    queryUser = FirebaseDatabase.getInstance().getReference("Users");
+                }else {
+                    queryUser = FirebaseDatabase.getInstance().getReference("Users").orderByChild(getStringResource(R.string.username)).equalTo(query);
+                }
+                // It is a class provide by the FirebaseUI to make a
+                // query in the database to fetch appropriate data
+                FirebaseRecyclerOptions<UserListModel> options = new FirebaseRecyclerOptions.Builder<UserListModel>()
+                        .setQuery(queryUser, UserListModel.class)
+                        .build();
+                // Connecting object of required Adapter class to
+                // the Adapter class itself
+                recyclerViewAdapterGroupMember = new RecyclerViewAdapterGroupMember(options, GroupMemberActivity.this);
+                // Connecting Adapter class with the Recycler view
+                // Function to tell the app to start getting data from database
+                recyclerView.setAdapter(recyclerViewAdapterGroupMember);
+                recyclerViewAdapterGroupMember.startListening();
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (newText.equals("")) {
+                    queryUser = FirebaseDatabase.getInstance().getReference("Users");
+                }else {
+                    queryUser = FirebaseDatabase.getInstance().getReference("Users").orderByChild(getStringResource(R.string.username)).equalTo(newText);
+                }
+                // It is a class provide by the FirebaseUI to make a
+                // query in the database to fetch appropriate data
+                FirebaseRecyclerOptions<UserListModel> options = new FirebaseRecyclerOptions.Builder<UserListModel>()
+                        .setQuery(queryUser, UserListModel.class)
+                        .build();
+                // Connecting object of required Adapter class to
+                // the Adapter class itself
+                recyclerViewAdapterGroupMember = new RecyclerViewAdapterGroupMember(options, GroupMemberActivity.this);
+                // Connecting Adapter class with the Recycler view
+                // Function to tell the app to start getting data from database
+                recyclerView.setAdapter(recyclerViewAdapterGroupMember);
+                recyclerViewAdapterGroupMember.startListening();
+                return false;
+            }
+        });
 
         //retrieve an instance of your database
         firebaseDatabase = FirebaseDatabase.getInstance();
@@ -123,6 +177,35 @@ public class GroupMemberActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate menu with items using MenuInflator
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.group_members_app_bar, menu);
+
+        // Initialise menu item search bar
+        // with id and take its object
+        MenuItem searchViewItem = menu.findItem(R.id.searchView);
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchViewItem);
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                Toast.makeText(GroupMemberActivity.this, "hello", Toast.LENGTH_SHORT).show();
+
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+
+                return false;
+            }
+        });
+
+        return super.onCreateOptionsMenu(menu);
+    }
+
     private void showAlertDialog(boolean blockUser, String userID, String title, String message, String positiveButton){
         AlertDialog.Builder builder = new AlertDialog.Builder(GroupMemberActivity.this);
         builder.setTitle(title)
@@ -166,3 +249,15 @@ public class GroupMemberActivity extends AppCompatActivity {
         return getResources().getString(string);
     }
 }
+
+/**
+ *
+ * private void closeKeyboard(){
+ *     View view = this.getCurrentFocus();
+ *     if (view != null){
+ *         InputMethodManager inputMethodManager = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+ *         if (inputMethodManager != null) {
+ *             inputMethodManager.hideSoftInputFromInputMethod(view.getWindowToken(), 0);
+ *         }
+ *     }
+ * }**/

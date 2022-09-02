@@ -10,3 +10,4 @@
 * Saving last user chat position for returning time(just like telegram).
 * Deleting chat message.
 * Added badge for admin
+* username is unique cannot appear two times by different user.

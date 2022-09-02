@@ -18,7 +18,7 @@
         <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/activity_forgot_password.xml" value="0.25" />
         <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/activity_general_chat.xml" value="0.2" />
         <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/activity_group_info_edit.xml" value="0.2" />
-        <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/activity_group_member.xml" value="0.26875" />
+        <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/activity_group_member.xml" value="0.2" />
         <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/activity_image_full_display.xml" value="0.25" />
         <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/activity_login.xml" value="0.25" />
         <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/activity_new_group.xml" value="0.264" />
@@ -26,7 +26,7 @@
         <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/activity_sign_up_intro.xml" value="0.264" />
         <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/activity_user_groups.xml" value="0.25" />
         <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/chat_list_item.xml" value="0.24895833333333334" />
-        <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/create_profile_dialog.xml" value="0.33" />
+        <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/create_profile_dialog.xml" value="0.264" />
         <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/edit_user_profile.xml" value="0.325" />
         <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/faq_layout.xml" value="0.264" />
         <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/faq_online_list_item.xml" value="0.2" />
@@ -39,6 +39,7 @@
         <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/user_groups_list_layout.xml" value="0.264" />
         <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/layout/user_profile.xml" value="0.25" />
         <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/menu/contextual_action_bar_chat.xml" value="0.27685185185185185" />
+        <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/menu/group_members_app_bar.xml" value="0.25" />
         <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/menu/top_app_bar.xml" value="0.2677083333333333" />
         <entry key="..\:/Users/Somto/AndroidStudioProjects/NounChat/chat/src/main/res/menu/top_app_bar_general_chat.xml" value="0.22" />
       </map>

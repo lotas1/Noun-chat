@@ -35,6 +35,7 @@ import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -74,7 +75,7 @@ public class GeneralChatActivity extends AppCompatActivity {
     private FirebaseUser user;
     private FirebaseDatabase database;
     private DatabaseReference groupRef, userRef, chatRef;
-    boolean isUserBan, isUserAdmin;
+    private boolean isUserBan = false, isUserAdmin = false;
     private String groupName, groupKey, groupImage, username, replyUsername, replyMessage, replyMessageKey, messageKey, textToCopy, messageUserId, chatImage, highlightedMessage;
 
     int usersCount;
@@ -176,38 +177,26 @@ public class GeneralChatActivity extends AppCompatActivity {
                 // display group info or description.
                 groupInfo();
             } else if (item.getItemId() == R.id.muteGroup) {
-                // check if user is admin
-                if (isUserAdmin) {
-                    if (isGroupMute) {
-                        // mute group
-                        muteOrUnMuteGroup("UnMute", "Do you want to un-mute group?", "UnMute", false);
-                    } else {
-                        //UnMute group.
-                        muteOrUnMuteGroup("Mute", "Do you want to mute group?", "Mute", true);
-                    }
+                if (isGroupMute) {
+                    // mute group
+                    muteOrUnMuteGroup("UnMute", "Do you want to un-mute group?", "UnMute", false);
                 } else {
-                    // notify user not admin
-                    showAlertDialog(GeneralChatActivity.this, "Admin Feature", "Only admin can access this features.");
+                    //UnMute group.
+                    muteOrUnMuteGroup("Mute", "Do you want to mute group?", "Mute", true);
                 }
             } else if (item.getItemId() == R.id.deleteGroup) {
-                // check if user is admin
-                if (isUserAdmin) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setTitle("Delete Group")
-                            .setMessage("Do you want to delete group?")
-                            .setNegativeButton("cancel", (dialog, which) -> {
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Delete Group")
+                        .setMessage("Do you want to delete group?")
+                        .setNegativeButton("cancel", (dialog, which) -> {
 
-                            })
-                            .setPositiveButton("delete", (dialog, which) -> {
-                                // delete group
-                                deleteGroup(groupImage);
-                            });
-                    AlertDialog dialog = builder.create();
-                    dialog.show();
-                } else {
-                    // notify user not admin
-                    showAlertDialog(GeneralChatActivity.this, "Admin Feature", "Only admin can access this features.");
-                }
+                        })
+                        .setPositiveButton("delete", (dialog, which) -> {
+                            // delete group
+                            deleteGroup(groupImage);
+                        });
+                AlertDialog dialog = builder.create();
+                dialog.show();
             }
             return false;
         });
@@ -218,6 +207,9 @@ public class GeneralChatActivity extends AppCompatActivity {
             imageButtonChatImageChooser.setVisibility(View.GONE);
             // set visibility to gone for closing image view of pin message for those who are not admin
             imageViewDeletePinMessage.setVisibility(View.GONE);
+            // enable visibility to false if user are not admin to avoid access
+            toolbar.getMenu().findItem(R.id.muteGroup).setVisible(false);
+            toolbar.getMenu().findItem(R.id.deleteGroup).setVisible(false);
         }
 
         // init onCreate
@@ -419,10 +411,12 @@ public class GeneralChatActivity extends AppCompatActivity {
         groupRef.child(groupKey).child(getStringResource(R.string.pinMessage)).setValue(message);
         groupRef.child(groupKey).child(getStringResource(R.string.pinMessageKey)).setValue(messageKey);
     }
+
     private void deletePinMessage() {
         groupRef.child(groupKey).child(getStringResource(R.string.pinMessage)).removeValue();
         groupRef.child(groupKey).child(getStringResource(R.string.pinMessageKey)).removeValue();
     }
+
     // gets pin message and updates ui.
     private void readPinMessage() {
         groupRef.child(groupKey).addValueEventListener(new ValueEventListener() {
@@ -470,7 +464,6 @@ public class GeneralChatActivity extends AppCompatActivity {
         // delete pin message
         imageViewDeletePinMessage.setOnClickListener(v -> deletePinMessage());
     }
-
 
     private void deleteSelectedMessage(String chatImage) {
         // create instance of firebase database & database reference.
@@ -541,13 +534,7 @@ public class GeneralChatActivity extends AppCompatActivity {
                         map.put(getStringResource(R.string.replyMessageKey), replyMessageKey);
                     }
                     assert key != null;
-                    chatRef.child(groupKey).child(key).setValue(map).addOnSuccessListener(unused -> {
-                        // Connecting Adapter class with the Recycler view
-                        // Function to tell the app to start getting data from database
-                        // refreshes adapter for new messages.
-                        recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
-                        recyclerViewAdapterChat.startListening();
-                    });
+                    chatRef.child(groupKey).child(key).setValue(map);
                     map.clear();
                     // update last message sender.
                     groupRef.child(groupKey).child(getStringResource(R.string.sender)).setValue(username);
@@ -594,14 +581,7 @@ public class GeneralChatActivity extends AppCompatActivity {
             map.put(getStringResource(R.string.replyMessageKey), replyMessageKey);
         }
         assert key != null;
-        chatRef.child(groupKey).child(key).setValue(map)
-                .addOnSuccessListener(unused -> {
-                    // Connecting Adapter class with the Recycler view
-                    // Function to tell the app to start getting data from database
-                    // refreshes adapter for new messages.
-                    recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
-                    recyclerViewAdapterChat.startListening();
-                });
+        chatRef.child(groupKey).child(key).setValue(map);
         map.clear();
         // update last message sender for ui update of group list.
         groupRef.child(groupKey).child(getStringResource(R.string.sender)).setValue(username);
@@ -622,7 +602,37 @@ public class GeneralChatActivity extends AppCompatActivity {
         // TODO recyclerViewChatData.setHasFixedSize(true);
 
         // firebase location path
-        queryChatMessages = FirebaseDatabase.getInstance().getReference(groupKey);
+        queryChatMessages = FirebaseDatabase.getInstance().getReference(groupKey).limitToLast(1500);
+        queryChatMessages.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+                // Connecting Adapter class with the Recycler view
+                // Function to tell the app to start getting data from database
+                // refreshes adapter for new messages.
+                recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
+                recyclerViewAdapterChat.startListening();
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
         // It is a class provide by the FirebaseUI to make a
         // query in the database to fetch appropriate data
         FirebaseRecyclerOptions<ChatModel> options = new FirebaseRecyclerOptions.Builder<ChatModel>()
@@ -744,13 +754,10 @@ public class GeneralChatActivity extends AppCompatActivity {
             @Override
             public void onDataChanged() {
                 super.onDataChanged();
-                // Connecting Adapter class with the Recycler view
-                // Function to tell the app to start getting data from database
-               // TODO recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
                 // read recycler page position from shared preferences.
                 int recyclerPagePosition = sharedPref.getInt(groupKey, 0);
                 if (recyclerPagePosition != 0) {
-                    // scroll to last position of recycler view by the user.
+                    // scroll to last position of the user previous position.
                     recyclerViewChatData.scrollToPosition(recyclerPagePosition);
                     //store position locally in shared preferences.
                     editor.putInt(groupKey, 0);
@@ -781,6 +788,7 @@ public class GeneralChatActivity extends AppCompatActivity {
             recyclerViewAdapterChat.notifyDataSetChanged();
         }
     }
+
     private void init(Context context) {
         // set visibility for pin message gone on start of application
         //linearLayoutPinMessageParentLayout.setVisibility(View.GONE);
@@ -822,12 +830,21 @@ public class GeneralChatActivity extends AppCompatActivity {
         userRef.child(user.getUid()).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                // get user info on username.
                 if (snapshot.child(getStringResource(R.string.username)).exists()) {
                     username = Objects.requireNonNull(snapshot.child(getStringResource(R.string.username)).getValue()).toString();
                 }
-
+                // get user info on username color
                 if (snapshot.child(getStringResource(R.string.usernameColor)).exists()) {
                     usernameColor = Integer.parseInt(Objects.requireNonNull(snapshot.child(getStringResource(R.string.usernameColor)).getValue()).toString());
+                }
+                // get user info on been banned
+                if (snapshot.child(getStringResource(R.string.userBan)).exists()) {
+                    isUserBan = (boolean) Objects.requireNonNull(snapshot.child(getStringResource(R.string.userBan)).getValue());
+                }
+                // get user info on been admin
+                if (snapshot.child(getStringResource(R.string.userAdmin)).exists()) {
+                    isUserAdmin = (boolean) Objects.requireNonNull(snapshot.child(getStringResource(R.string.userAdmin)).getValue());
                 }
             }
 

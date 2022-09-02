@@ -20,6 +20,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -99,15 +100,9 @@ public class UserGroupsActivity extends AppCompatActivity {
 
         // opens new group on click on fab
         fab.setOnClickListener(v -> {
-            // check if user is admin
-            if (isUserAdmin){
-                // navigate to view for creating group.
-                Intent intent = new Intent(UserGroupsActivity.this, NewGroupActivity.class);
-                startActivity(intent);
-            }else {
-                // notify user not admin
-                showAlertDialog(UserGroupsActivity.this, "Admin Feature", "Only admin can access this features.");
-            }
+            // navigate to view for creating group.
+            Intent intent = new Intent(UserGroupsActivity.this, NewGroupActivity.class);
+            startActivity(intent);
         });
 
         // navigate back on click
@@ -237,39 +232,57 @@ public class UserGroupsActivity extends AppCompatActivity {
             } else if (isEmpty(autoCompleteTextViewDepartment)) {
                 textInputLayoutDepartment.setError("Select your department");
             }else {
-
-
+                // create user profile
                 if (user != null) {
-                    String uid, username, department;
+                    String username, department;
+                    // get random colors
                     RandomColors randomColors = new RandomColors();
                     int color = randomColors.getColor();
 
+                    //int color= ((int)(Math.random()*16777215)) | (0xFF << 24);
+
                     //get user details
-                    username = autoCompleteTextViewUsername.getText().toString();
+                    username = autoCompleteTextViewUsername.getText().toString().toLowerCase().trim().replaceAll(" ", "");
                     department = autoCompleteTextViewDepartment.getText().toString();
+                    // checks if username exist before creating or updating user profile
+                    queryUserProfile = FirebaseDatabase.getInstance().getReference("Users").orderByChild(getStringResource(R.string.username)).equalTo(username);
+                    queryUserProfile.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            if (snapshot.exists()){
+                                Toast.makeText(UserGroupsActivity.this, "Username already taken, use another username", Toast.LENGTH_SHORT).show();
+                            }else {
+                                // The user's ID, unique to the Firebase project. Do NOT use this value to
+                                // authenticate with your backend server, if you have one. Use
+                                // FirebaseUser.getIdToken() instead.
+                                String uid = user.getUid();
+                                Map<String, Object> map = new HashMap<>();
+                                map.put(getStringResource(R.string.username), username);
+                                map.put(getStringResource(R.string.userId), uid);
+                                map.put(getStringResource(R.string.department), department);
+                                map.put(getStringResource(R.string.userBan), false);
+                                map.put(getStringResource(R.string.userAdmin), false);
+                                map.put(getStringResource(R.string.usernameColor), color);
 
-                    // The user's ID, unique to the Firebase project. Do NOT use this value to
-                    // authenticate with your backend server, if you have one. Use
-                    // FirebaseUser.getIdToken() instead.
-                    uid = user.getUid();
-                    Map<String, Object> map = new HashMap<>();
-                    map.put(getStringResource(R.string.username), username);
-                    map.put(getStringResource(R.string.userId), uid);
-                    map.put(getStringResource(R.string.department), department);
-                    map.put(getStringResource(R.string.userBan), false);
-                    map.put(getStringResource(R.string.userAdmin), false);
-                    map.put(getStringResource(R.string.usernameColor), color);
+                                // write to firebase
+                                myRef.child(uid).setValue(map);
+                                map.clear();
 
-                    // write to firebase
-                    myRef.child(uid).setValue(map);
-                    map.clear();
+                                // close dialog
+                                dialog.dismiss();
+                            }
+                        }
 
-                    // close dialog
-                    dialog.dismiss();
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+
+                        }
+                    });
                 }
             }
         });
     }
+
     // custom dialog for user view profile
     private void customDialogMyProfile(){
         // alert dialog
@@ -358,19 +371,60 @@ public class UserGroupsActivity extends AppCompatActivity {
                 if (user != null) {
                     String username, department;
                     //get user details
-                    username = autoCompleteTextViewUsername.getText().toString();
+                    username = autoCompleteTextViewUsername.getText().toString().toLowerCase().trim().replaceAll(" ", "");
                     department = autoCompleteTextViewDepartment.getText().toString();
-                    // The user's ID, unique to the Firebase project. Do NOT use this value to
-                    // authenticate with your backend server, if you have one. Use
-                    // FirebaseUser.getIdToken() instead.
-                    // write to firebase
-                    myRef.child(user.getUid()).child(getStringResource(R.string.username)).setValue(username);
-                    myRef.child(user.getUid()).child(getStringResource(R.string.department)).setValue(department);
+                    // checks if username exist before creating or updating user profile
+                    queryUserProfile = FirebaseDatabase.getInstance().getReference("Users").orderByChild(getStringResource(R.string.username)).equalTo(username);
+                    queryUserProfile.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            if (snapshot.exists()){
+                                queryUserProfile = FirebaseDatabase.getInstance().getReference("Users").child(user.getUid()).child(getStringResource(R.string.username));
+                                queryUserProfile.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                        if (snapshot.exists()) {
+                                            // checks if user new username matches with his previous username
+                                            // if so allow the user to update profile.
+                                            if (snapshot.getValue().toString().equals(username)){
+                                                // write to firebase
+                                                myRef.child(user.getUid()).child(getStringResource(R.string.username)).setValue(username);
+                                                myRef.child(user.getUid()).child(getStringResource(R.string.department)).setValue(department);
+                                                // close dialog
+                                                dialog.dismiss();
+                                                // notify user
+                                                showSnackBar("Profile update successful.");
+                                            }else {
+                                                // update user that the username has already been taken
+                                                Toast.makeText(UserGroupsActivity.this, "Username already taken, use another username", Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    }
 
-                    // close dialog
-                    dialog.dismiss();
-                    // notify user
-                    showSnackBar("Profile update successful.");
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError error) {
+
+                                    }
+                                });
+                            }else {
+                                // The user's ID, unique to the Firebase project. Do NOT use this value to
+                                // authenticate with your backend server, if you have one. Use
+                                // FirebaseUser.getIdToken() instead.
+                                // write to firebase
+                                myRef.child(user.getUid()).child(getStringResource(R.string.username)).setValue(username);
+                                myRef.child(user.getUid()).child(getStringResource(R.string.department)).setValue(department);
+                                // close dialog
+                                dialog.dismiss();
+                                // notify user
+                                showSnackBar("Profile update successful.");
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {
+
+                        }
+                    });
                 }
             }
         });
@@ -413,6 +467,12 @@ public class UserGroupsActivity extends AppCompatActivity {
                 // checks if user is an admin and update ui
                 if (snapshot.child(getStringResource(R.string.userAdmin)).exists()){
                     isUserAdmin = (boolean) Objects.requireNonNull(snapshot.child(getStringResource(R.string.userAdmin)).getValue());
+                    // checks if user is admin or not before granting access to some features.
+                    if (isUserAdmin){
+                        fab.setVisibility(View.VISIBLE);
+                    }else {
+                        fab.setVisibility(View.GONE);
+                    }
                 }
 
 
