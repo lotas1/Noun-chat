@@ -33,6 +33,7 @@ import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -64,7 +65,7 @@ public class GeneralChatActivity extends AppCompatActivity {
     private LinearLayout linearLayoutUser, linearLayoutAdmin;
     private TextView textViewMessage, textViewGroupInfoMessage, textViewUsernameReply, textViewMessageReply, textViewGroupName, textViewPinMessage;
     private ImageView imageViewGroupInfoEdit, imageViewFullDisplay, imageViewDeletePinMessage;
-    private ImageButton imageButtonCloseReplyChat, imageButtonSendUserData, imageButtonChatImageChooser, imageButtonDeleteChatImage, imageButtonScrollDown;
+    private ImageButton imageButtonCloseReplyChat, imageButtonSendUserData, imageButtonChatImageChooser, imageButtonDeleteChatImage;
     private LinearLayout linearLayoutReplyMessageGeneralChat, linearLayoutPinMessageParentLayout;
     private ConstraintLayout constraintLayoutImageFullDisplayParentLayout;
     private EditText editTextUserMessage;
@@ -74,6 +75,7 @@ public class GeneralChatActivity extends AppCompatActivity {
     private Query queryUser, queryChatMessages;
     private FirebaseUser user;
     private FirebaseDatabase database;
+    private FloatingActionButton fabScrollDown, fabScrollUp;
     private DatabaseReference groupRef, userRef, chatRef;
     private boolean isUserBan = false, isUserAdmin = false;
     private String groupName, groupKey, groupImage, username, replyUsername, replyMessage, replyMessageKey, messageKey, textToCopy, messageUserId, chatImage, highlightedMessage;
@@ -141,7 +143,8 @@ public class GeneralChatActivity extends AppCompatActivity {
         linearLayoutPinMessageParentLayout = findViewById(R.id.linearLayout_PinMessageParentLayout_generalChat);
         textViewPinMessage = findViewById(R.id.textView_PinMessage_generalChat);
         imageViewDeletePinMessage = findViewById(R.id.imageView_ClosePinMessage_generalChat);
-        imageButtonScrollDown = findViewById(R.id.imageButton_scrollDown_generalChat);
+        fabScrollDown = findViewById(R.id.fab_scrollDown_generalChat);
+        fabScrollUp = findViewById(R.id.fab_scrollUp_generalChat);
 
         // instance of bundle
         Bundle b = getIntent().getExtras();
@@ -202,17 +205,6 @@ public class GeneralChatActivity extends AppCompatActivity {
             return false;
         });
 
-        // prevent user from sending images in chat
-        if (!isUserAdmin) {
-            // set visibility gone for image chat view temporal display gone on starting of the application.
-            imageButtonChatImageChooser.setVisibility(View.GONE);
-            // set visibility to gone for closing image view of pin message for those who are not admin
-            imageViewDeletePinMessage.setVisibility(View.GONE);
-            // enable visibility to false if user are not admin to avoid access
-            toolbar.getMenu().findItem(R.id.muteGroup).setVisible(false);
-            toolbar.getMenu().findItem(R.id.deleteGroup).setVisible(false);
-        }
-
         // init onCreate
         init(GeneralChatActivity.this);
 
@@ -255,8 +247,20 @@ public class GeneralChatActivity extends AppCompatActivity {
                         // sends user message with image attached.
                         sendMessageWithImage(GeneralChatActivity.this, uriChatImage, message);
                     } else {
-                        // send user message without image attached.
-                        sendMessageWithOutImage(message);
+                        // prevent users from sending message with web link
+                        if (containsLink(message)){
+                            // allow admin to send weblink
+                            if (isUserAdmin) {
+                                // send user message without image attached.
+                                sendMessageWithOutImage(message);
+                            }else {
+                                Toast.makeText(this, "Web link are not allowed", Toast.LENGTH_SHORT).show();
+                            }
+                        }else {
+                            // send user message without image attached.
+                            sendMessageWithOutImage(message);
+                        }
+
                         //if (BadWordsFilter.filterText(message)){
                         //    Toast.makeText(this, "This message was blocked because a bad word was found.", Toast.LENGTH_SHORT).show();
                         //}else{
@@ -270,7 +274,9 @@ public class GeneralChatActivity extends AppCompatActivity {
         });
 
         // scroll down to last position of recycler view
-        imageButtonScrollDown.setOnClickListener(v -> recyclerViewChatData.smoothScrollToPosition(Objects.requireNonNull(recyclerViewChatData.getAdapter()).getItemCount()-1));
+        fabScrollDown.setOnClickListener(v -> recyclerViewChatData.smoothScrollToPosition(Objects.requireNonNull(recyclerViewChatData.getAdapter()).getItemCount()-1));
+        // scroll up to the first position in the recycler view
+        fabScrollUp.setOnClickListener(v -> recyclerViewChatData.smoothScrollToPosition(0));
 
     }
 
@@ -372,6 +378,27 @@ public class GeneralChatActivity extends AppCompatActivity {
 
         }
     };
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (isUserAdmin) {
+            fabScrollUp.setVisibility(View.VISIBLE);
+            linearLayoutAdmin.setVisibility(View.VISIBLE);
+            linearLayoutReplyMessageGeneralChat.setVisibility(View.VISIBLE);
+        }else {
+            fabScrollUp.setVisibility(View.GONE);
+            linearLayoutAdmin.setVisibility(View.GONE);
+            linearLayoutReplyMessageGeneralChat.setVisibility(View.GONE);
+            // set visibility gone for image chat view temporal display gone on starting of the application.
+            imageButtonChatImageChooser.setVisibility(View.GONE);
+            // set visibility to gone for closing image view of pin message for those who are not admin
+            imageViewDeletePinMessage.setVisibility(View.GONE);
+            // enable visibility to false if user are not admin to avoid access
+            toolbar.getMenu().findItem(R.id.muteGroup).setVisible(false);
+            toolbar.getMenu().findItem(R.id.deleteGroup).setVisible(false);
+        }
+    }
 
     @Override
     protected void onPause() {
@@ -1038,6 +1065,21 @@ public class GeneralChatActivity extends AppCompatActivity {
                 });
         AlertDialog dialog = builder.create();
         dialog.show();
+    }
+
+    public static boolean containsLink(String input) {
+        boolean result = false;
+
+        String[] parts = input.split("\\s+");
+
+        for (String item : parts) {
+            if (android.util.Patterns.WEB_URL.matcher(item).matches()) {
+                result = true;
+                break;
+            }
+        }
+
+        return result;
     }
 
     // returns string from resources

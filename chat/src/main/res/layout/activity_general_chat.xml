@@ -54,14 +54,31 @@
                 android:layout_marginTop="0dp"
                 android:layout_weight="1" />
 
-            <ImageButton
-                android:id="@+id/imageButton_scrollDown_generalChat"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_scrollDown_generalChat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentBottom="true"
-                android:backgroundTint="@color/white"
-                android:src="@drawable/ic_baseline_arrow_downward_24" />
+                android:gravity="center"
+                app:fabSize="mini"
+                app:srcCompat="@drawable/ic_baseline_keyboard_arrow_down_24" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_scrollUp_generalChat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_above="@+id/fab_scrollDown_generalChat"
+                android:gravity="center"
+                app:fabSize="mini"
+                app:srcCompat="@drawable/ic_baseline_keyboard_arrow_up_24" />
+
+
+
+
+
 
         </RelativeLayout>
 

@@ -11,3 +11,4 @@
 * Deleting chat message.
 * Added badge for admin
 * username is unique cannot appear two times by different user.
+* prevent non admin from sending weblink

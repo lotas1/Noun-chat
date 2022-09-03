@@ -171,7 +171,16 @@ public class UserGroupsActivity extends AppCompatActivity {
         userGroupsRecyclerViewAdapter.stopListening();
     }
 
-
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // checks if user is admin or not before granting access to some features.
+        if (isUserAdmin){
+            fab.setVisibility(View.VISIBLE);
+        }else {
+            fab.setVisibility(View.GONE);
+        }
+    }
 
     // delete user account from firebase
     private void deleteUserAccount(){
