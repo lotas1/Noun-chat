@@ -132,6 +132,7 @@
                 android:fontFamily="@font/poppins"
                 android:text="hello w..."
                 android:textColor="@color/black"
+                android:autoLink="web"
                 android:textSize="15dp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/cardView_ImageFullDisplay_Chat" />

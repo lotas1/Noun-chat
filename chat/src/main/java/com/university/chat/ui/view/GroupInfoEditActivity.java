@@ -284,7 +284,7 @@ public class GroupInfoEditActivity extends AppCompatActivity {
     }
     // checks if autocomplete text view is empty.
     private boolean isEmpty(AutoCompleteTextView autoCompleteTextView) {
-        return TextUtils.isEmpty(autoCompleteTextView.getEditableText());
+        return autoCompleteTextView.getText().toString().trim().equals("");
     }
     private void showAlertDialog(Context context, String title, String message){
         AlertDialog.Builder builder = new AlertDialog.Builder(context);

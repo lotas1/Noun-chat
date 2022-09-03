@@ -115,7 +115,7 @@ public class ForgotPasswordActivity extends AppCompatActivity {
     }
     // checks if autocomplete text view is empty.
     private boolean isEmpty(AutoCompleteTextView autoCompleteTextView) {
-        return TextUtils.isEmpty(autoCompleteTextView.getEditableText());
+        return autoCompleteTextView.getText().toString().trim().equals("");
     }
     // validate if it is email
     private boolean isValidEmail(String email) {

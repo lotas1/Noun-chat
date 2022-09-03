@@ -96,6 +96,7 @@ public class GeneralChatActivity extends AppCompatActivity {
 
     private boolean clickedPinnedOrReplyMessage = false;
     private ArrayList<String> chatPushKeyArray;
+    private int limitToLast = 1500;
 
 
     @Override
@@ -445,7 +446,13 @@ public class GeneralChatActivity extends AppCompatActivity {
         });
         // get all chat push key and store in an array.
         // for been able to get the pin message position
-        chatRef.child(groupKey).addValueEventListener(new ValueEventListener() {
+        if (isUserAdmin) {
+            queryChatMessages = FirebaseDatabase.getInstance().getReference(groupKey);
+        }else{
+            queryChatMessages = FirebaseDatabase.getInstance().getReference(groupKey).limitToLast(limitToLast);
+        }
+        // get all messages and store in array
+        queryChatMessages.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 // create instance of chat data push key
@@ -602,7 +609,12 @@ public class GeneralChatActivity extends AppCompatActivity {
         // TODO recyclerViewChatData.setHasFixedSize(true);
 
         // firebase location path
-        queryChatMessages = FirebaseDatabase.getInstance().getReference(groupKey).limitToLast(1500);
+        if (isUserAdmin) {
+            queryChatMessages = FirebaseDatabase.getInstance().getReference(groupKey);
+        }else{
+            queryChatMessages = FirebaseDatabase.getInstance().getReference(groupKey).limitToLast(limitToLast);
+        }
+
         queryChatMessages.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {

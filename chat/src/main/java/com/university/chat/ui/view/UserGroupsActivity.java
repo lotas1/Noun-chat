@@ -502,7 +502,7 @@ public class UserGroupsActivity extends AppCompatActivity {
     }
     // checks if autocomplete text view is empty.
     private boolean isEmpty(AutoCompleteTextView autoCompleteTextView) {
-        return TextUtils.isEmpty(autoCompleteTextView.getEditableText());
+        return autoCompleteTextView.getText().toString().trim().equals("");
     }
     // clears textInput layout error
     private void clearError(AutoCompleteTextView autoCompleteTextView, TextInputLayout textInputLayout){
