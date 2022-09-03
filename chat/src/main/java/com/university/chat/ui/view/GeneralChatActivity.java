@@ -32,6 +32,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
@@ -98,7 +99,7 @@ public class GeneralChatActivity extends AppCompatActivity {
 
     private boolean clickedPinnedOrReplyMessage = false;
     private ArrayList<String> chatPushKeyArray;
-    private int limitToLast = 1500;
+    private int limitToLast = 7000;
 
 
     @Override
@@ -205,6 +206,13 @@ public class GeneralChatActivity extends AppCompatActivity {
             return false;
         });
 
+        // on click on pin message recycler view scrolls to the pin message position
+        linearLayoutPinMessageParentLayout.setOnClickListener(v -> {
+            // scroll to and highlight position to notify user about the message
+            scroll$HighlightMessagePosition(GeneralChatActivity.this, pinMessageKey, "Pin message has been deleted");
+
+        });
+
         // init onCreate
         init(GeneralChatActivity.this);
 
@@ -276,7 +284,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         // scroll down to last position of recycler view
         fabScrollDown.setOnClickListener(v -> recyclerViewChatData.smoothScrollToPosition(Objects.requireNonNull(recyclerViewChatData.getAdapter()).getItemCount()-1));
         // scroll up to the first position in the recycler view
-        fabScrollUp.setOnClickListener(v -> recyclerViewChatData.smoothScrollToPosition(0));
+        fabScrollUp.setOnClickListener(v -> recyclerViewChatData.scrollToPosition(0));
 
     }
 
@@ -384,8 +392,8 @@ public class GeneralChatActivity extends AppCompatActivity {
         super.onStart();
         if (isUserAdmin) {
             fabScrollUp.setVisibility(View.VISIBLE);
-            linearLayoutAdmin.setVisibility(View.VISIBLE);
-            linearLayoutReplyMessageGeneralChat.setVisibility(View.VISIBLE);
+            //linearLayoutAdmin.setVisibility(View.VISIBLE);
+            //linearLayoutReplyMessageGeneralChat.setVisibility(View.VISIBLE);
         }else {
             fabScrollUp.setVisibility(View.GONE);
             linearLayoutAdmin.setVisibility(View.GONE);
@@ -404,7 +412,7 @@ public class GeneralChatActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         // get current position of recycler view
-        int pagePosition = ((LinearLayoutManager) Objects.requireNonNull(recyclerViewChatData.getLayoutManager())).findLastCompletelyVisibleItemPosition();
+        int pagePosition = ((LinearLayoutManager) Objects.requireNonNull(recyclerViewChatData.getLayoutManager())).findLastVisibleItemPosition();
         //store position locally in shared preferences.
         editor.putInt(groupKey, pagePosition);
         editor.apply();
@@ -568,7 +576,12 @@ public class GeneralChatActivity extends AppCompatActivity {
                         map.put(getStringResource(R.string.replyMessageKey), replyMessageKey);
                     }
                     assert key != null;
-                    chatRef.child(groupKey).child(key).setValue(map);
+                    chatRef.child(groupKey).child(key).setValue(map).addOnSuccessListener(unused -> {
+                        // Connecting Adapter class with the Recycler view
+                        // Function to tell the app to start getting data from database
+                        // refreshes adapter for new messages.
+                        recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
+                    });
                     map.clear();
                     // update last message sender.
                     groupRef.child(groupKey).child(getStringResource(R.string.sender)).setValue(username);
@@ -615,7 +628,12 @@ public class GeneralChatActivity extends AppCompatActivity {
             map.put(getStringResource(R.string.replyMessageKey), replyMessageKey);
         }
         assert key != null;
-        chatRef.child(groupKey).child(key).setValue(map);
+        chatRef.child(groupKey).child(key).setValue(map).addOnSuccessListener(unused -> {
+            // Connecting Adapter class with the Recycler view
+            // Function to tell the app to start getting data from database
+            // refreshes adapter for new messages.
+            recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
+        });
         map.clear();
         // update last message sender for ui update of group list.
         groupRef.child(groupKey).child(getStringResource(R.string.sender)).setValue(username);
@@ -626,6 +644,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         isReplyChatSelected = false;
         replyUsername = null;
         replyMessage = null;
+
     }
 
     private void chatRecyclerView(Context context) {
@@ -642,14 +661,25 @@ public class GeneralChatActivity extends AppCompatActivity {
             queryChatMessages = FirebaseDatabase.getInstance().getReference(groupKey).limitToLast(limitToLast);
         }
 
+        /**
+         * int pagePosition = ((LinearLayoutManager) Objects.requireNonNull(recyclerViewChatData.getLayoutManager())).findLastCompletelyVisibleItemPosition();
+         *                 if (recyclerViewChatData.getAdapter().getItemCount() - 1 == pagePosition) {
+         *                     // Connecting Adapter class with the Recycler view
+         *                     // Function to tell the app to start getting data from database
+         *                     // refreshes adapter for new messages.
+         *                     recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
+         *                     recyclerViewAdapterChat.startListening();
+         *                 }**/
         queryChatMessages.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                // Connecting Adapter class with the Recycler view
-                // Function to tell the app to start getting data from database
-                // refreshes adapter for new messages.
-                recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
-                recyclerViewAdapterChat.startListening();
+                int pagePosition = ((LinearLayoutManager) Objects.requireNonNull(recyclerViewChatData.getLayoutManager())).findLastCompletelyVisibleItemPosition();
+                if (Objects.requireNonNull(recyclerViewChatData.getAdapter()).getItemCount() - 1 == pagePosition) {
+                    // Connecting Adapter class with the Recycler view
+                    // Function to tell the app to start getting data from database
+                    // refreshes adapter for new messages.
+                    recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
+                }
             }
 
             @Override
@@ -766,7 +796,7 @@ public class GeneralChatActivity extends AppCompatActivity {
                                     clickedPinnedOrReplyMessage = false;
                                 }
                             };
-                            timer.scheduleAtFixedRate(timerTask,1000,4000);
+                            timer.schedule(timerTask,2000);
                         }
                     }
                 }
@@ -821,7 +851,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         if (messagePositionToScrollTo < 0){
             Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show();
         }else {
-            recyclerViewChatData.smoothScrollToPosition(messagePositionToScrollTo);
+            recyclerViewChatData.scrollToPosition(messagePositionToScrollTo);
             // notify that user clicked pin message, so that the pin position message could be highlighted
             clickedPinnedOrReplyMessage = true;
             recyclerViewAdapterChat.notifyDataSetChanged();
@@ -829,14 +859,6 @@ public class GeneralChatActivity extends AppCompatActivity {
     }
 
     private void init(Context context) {
-        // set visibility for pin message gone on start of application
-        //linearLayoutPinMessageParentLayout.setVisibility(View.GONE);
-        // on click on pin message recycler view scrolls to the pin message position
-        linearLayoutPinMessageParentLayout.setOnClickListener(v -> {
-            // scroll to and highlight position to notify user about the message
-            scroll$HighlightMessagePosition(context, pinMessageKey, "Pin message has been deleted");
-
-        });
         // read pin message from firebase
         readPinMessage();
         // set reply layout visibility gone by default
