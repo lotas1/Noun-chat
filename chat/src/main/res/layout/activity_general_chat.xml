@@ -229,7 +229,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@color/white"
-                android:orientation="horizontal"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
                 android:padding="10dp">
 
                 <TextView
@@ -240,6 +241,16 @@
                     android:text=""
                     android:textColor="@color/black"
                     android:textSize="16dp" />
+                <TextView
+                    android:id="@+id/textView_ViolationRules_generalChat"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/poppins_semibold"
+                    android:textColor="@color/secondaryColor"
+                    android:paddingHorizontal="5dp"
+                    android:layout_marginTop="5dp"
+                    android:text="Violation rules" />
+
             </LinearLayout>
 
         </LinearLayout>

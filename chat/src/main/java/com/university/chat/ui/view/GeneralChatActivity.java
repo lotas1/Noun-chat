@@ -18,6 +18,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.Html;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -62,7 +63,7 @@ import java.util.TimerTask;
 public class GeneralChatActivity extends AppCompatActivity {
     private Toolbar toolbar;
     private LinearLayout linearLayoutUser, linearLayoutAdmin;
-    private TextView textViewViolation_GroupMuteMessage, textViewGroupInfoMessage, textViewUsernameReply, textViewMessageReply, textViewGroupName, textViewPinMessage;
+    private TextView textViewViolation_GroupMuteMessage, textViewGroupInfoMessage, textViewUsernameReply, textViewMessageReply, textViewGroupName, textViewPinMessage, textViewViolationRules;
     private ImageView imageViewGroupInfoEdit, imageViewFullDisplay, imageViewDeletePinMessage;
     private ImageButton imageButtonCloseReplyChat, imageButtonSendUserData, imageButtonChatImageChooser, imageButtonDeleteChatImage;
     private LinearLayout linearLayoutReplyMessageGeneralChat, linearLayoutPinMessageParentLayout;
@@ -144,6 +145,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         imageViewDeletePinMessage = findViewById(R.id.imageView_ClosePinMessage_generalChat);
         fabScrollDown = findViewById(R.id.fab_scrollDown_generalChat);
         fabScrollUp = findViewById(R.id.fab_scrollUp_generalChat);
+        textViewViolationRules = findViewById(R.id.textView_ViolationRules_generalChat);
 
         // instance of bundle
         Bundle b = getIntent().getExtras();
@@ -223,14 +225,19 @@ public class GeneralChatActivity extends AppCompatActivity {
             linearLayoutReplyMessageGeneralChat.setVisibility(View.GONE);
         });
 
+        // on click on textview to display violation rules message to user
+        textViewViolationRules.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //update user
+                showAlertDialog(GeneralChatActivity.this, "Violated Rules", "You have been banned from sending messages for violation of one of this rules\n1) Using bad words\n2) Posting of unrelated information.\n3) Sending spam messages");
+            }
+        });
 
         // observer for getting replied message position
-        generalChatViewModel.getReplyPositionLiveData().observe(this, new Observer<Integer>() {
-            @Override
-            public void onChanged(Integer replyPosition) {
-                // scroll to the reply message position.
-                recyclerViewChatData.smoothScrollToPosition(replyPosition);
-            }
+        generalChatViewModel.getReplyPositionLiveData().observe(this, replyPosition -> {
+            // scroll to the reply message position.
+            recyclerViewChatData.smoothScrollToPosition(replyPosition);
         });
 
         // on click for choosing image to send along user message
@@ -1069,6 +1076,8 @@ public class GeneralChatActivity extends AppCompatActivity {
                     linearLayoutUser.setVisibility(View.GONE);
                     // updates user for rule violation
                     textViewViolation_GroupMuteMessage.setText("For Violation of rules you have been ban from sending messages");
+                    textViewViolationRules.setVisibility(View.VISIBLE);
+                    textViewViolationRules.setText(Html.fromHtml("<u>Violated Rules</u>"));
                     linearLayoutAdmin.setVisibility(View.VISIBLE);
                 } else {
                     linearLayoutUser.setVisibility(View.VISIBLE);
@@ -1078,6 +1087,7 @@ public class GeneralChatActivity extends AppCompatActivity {
                 linearLayoutUser.setVisibility(View.GONE);
                 textViewViolation_GroupMuteMessage.setText("Only admins are able to post here.");
                 linearLayoutAdmin.setVisibility(View.VISIBLE);
+                textViewViolationRules.setVisibility(View.GONE);
             }
 
         } else {
@@ -1088,7 +1098,9 @@ public class GeneralChatActivity extends AppCompatActivity {
                 linearLayoutUser.setVisibility(View.GONE);
                 // updates user for rule violation
                 textViewViolation_GroupMuteMessage.setText("For Violation of rules you have been ban from sending messages");
+                textViewViolationRules.setText(Html.fromHtml("<u>Violated Rules</u>"));
                 linearLayoutAdmin.setVisibility(View.VISIBLE);
+                textViewViolationRules.setVisibility(View.VISIBLE);
             } else {
                 linearLayoutUser.setVisibility(View.VISIBLE);
                 linearLayoutAdmin.setVisibility(View.GONE);

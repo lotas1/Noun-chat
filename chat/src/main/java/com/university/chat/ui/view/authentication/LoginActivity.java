@@ -22,6 +22,7 @@ import com.university.chat.ui.view.UserGroupsActivity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Html;
 import android.text.TextUtils;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -77,6 +78,7 @@ public class LoginActivity extends AppCompatActivity {
         clearError(autoCompleteTextViewEmail, textInputLayoutEmail);
         clearError(autoCompleteTextViewPassword, textInputLayoutPassword);
 
+
         // Email login button
         buttonLogin.setOnClickListener(v -> {
             // clear error message in text input layout
@@ -108,6 +110,9 @@ public class LoginActivity extends AppCompatActivity {
                 }
             }
         });
+
+        textViewSignUp.setText(Html.fromHtml("<u>Sign Up</u>"));
+        textViewForgotPassword.setText(Html.fromHtml("<u>Forgot Password?</u>"));
 
         googleLogInButton.setOnClickListener(v -> {
             signIn();

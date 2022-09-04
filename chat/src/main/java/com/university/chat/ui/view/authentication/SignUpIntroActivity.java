@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Html;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -38,6 +39,7 @@ public class SignUpIntroActivity extends AppCompatActivity {
         // instantiate views
         buttonGetStarted = findViewById(R.id.button_signUp_getStarted);
         textViewLogin = findViewById(R.id.textView_login);
+        textViewLogin.setText(Html.fromHtml("<u>Log In</u>"));
 
         textViewLogin.setOnClickListener(v -> {
             Intent intent = new Intent(this, LoginActivity.class);
