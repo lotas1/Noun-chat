@@ -55,16 +55,16 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
 
     @Override
     protected void onBindViewHolder(@NonNull ChatViewHolderSent holder, int position, @NonNull ChatModel model) {
-        ViewGroup.MarginLayoutParams cardViewMarginParams = (ViewGroup.MarginLayoutParams) holder.linearParentLayoutSent.getLayoutParams();
+        ViewGroup.MarginLayoutParams cardViewMarginParams = (ViewGroup.MarginLayoutParams) holder.linearParentLayout.getLayoutParams();
         if (Objects.equals(model.getUserId(), user.getUid())){
             //cardViewMarginParams.setMargins(100, 0, 0, 0);
-            holder.linearParentLayoutSent.setGravity(Gravity.RIGHT);
+            holder.linearParentLayout.setGravity(Gravity.RIGHT);
             holder.cardView.setCardBackgroundColor(context.getResources().getColor(com.university.theme.R.color.Tea_Green));
             // sending user cant see there username
             holder.linearLayoutUsernameBadge.setVisibility(View.GONE);
         }else{
             //cardViewMarginParams.setMargins(0, 0, 100, 0);
-            holder.linearParentLayoutSent.setGravity(Gravity.LEFT);
+            holder.linearParentLayout.setGravity(Gravity.LEFT);
             holder.cardView.setCardBackgroundColor(context.getResources().getColor(com.university.theme.R.color.white));
             // user can see receiver username or badge.
             holder.linearLayoutUsernameBadge.setVisibility(View.VISIBLE);
@@ -84,18 +84,18 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
         }
 
         if (model.getUsername() != null) {
-            holder.textViewUsernameSent.setText("@".concat(model.getUsername()));
-            holder.textViewUsernameSent.setTextColor(model.getUsernameColor());
+            holder.textViewUsername.setText("@".concat(model.getUsername()));
+            holder.textViewUsername.setTextColor(model.getUsernameColor());
         }
 
 
 
         if (model.getMessage() != null){
-            holder.textViewMessageSent.setText(model.getMessage());
+            holder.textViewMessage.setText(model.getMessage());
         }
 
         if (model.getTime() != null) {
-            holder.textViewDateSent.setText(model.getTime());
+            holder.textViewDate.setText(model.getTime());
         }
 
 
@@ -133,9 +133,9 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
     }
 
     public class ChatViewHolderSent extends RecyclerView.ViewHolder{
-        private TextView textViewUsernameSent, textViewMessageSent, textViewDateSent;
-        public TextView textViewUsernameReply, textViewMessageReply;
-        private LinearLayout linearParentLayoutSent, linearLayoutUsernameBadge;
+        private TextView textViewMessage, textViewDate;
+        public TextView textViewUsernameReply, textViewMessageReply, textViewUsername;
+        private LinearLayout linearParentLayout, linearLayoutUsernameBadge;
         public CardView cardView, cardViewImageFullDisplay, cardViewReplyInfo;
         private ImageView imageViewImageFullDisplay, imageViewBadge;
         public ImageView imageViewReplyBadge;
@@ -143,10 +143,10 @@ public class RecyclerViewAdapterChat extends FirebaseRecyclerAdapter<ChatModel, 
         public ChatViewHolderSent(@NonNull View itemView) {
             super(itemView);
 
-            textViewUsernameSent = itemView.findViewById(R.id.textView_usernameChat_sent);
-            textViewMessageSent = itemView.findViewById(R.id.textView_messageChat_sent);
-            textViewDateSent = itemView.findViewById(R.id.textView_date_chat_sent);
-            linearParentLayoutSent = itemView.findViewById(R.id.linear_parentLayout_chat_sent);
+            textViewUsername = itemView.findViewById(R.id.textView_usernameChat_sent);
+            textViewMessage = itemView.findViewById(R.id.textView_messageChat_sent);
+            textViewDate = itemView.findViewById(R.id.textView_date_chat_sent);
+            linearParentLayout = itemView.findViewById(R.id.linear_parentLayout_chat_sent);
             cardView = itemView.findViewById(R.id.cardView_chat);
             cardViewImageFullDisplay = itemView.findViewById(R.id.cardView_ImageFullDisplay_Chat);
             imageViewImageFullDisplay = itemView.findViewById(R.id.imageView_ImageFullDisplay_Chat);

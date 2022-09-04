@@ -13,9 +13,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.university.chat.R;
-import com.university.chat.data.model.UserListModel;
+import com.university.chat.data.model.ChatModel;
 
-public class RecyclerViewAdapterGroupMember extends FirebaseRecyclerAdapter<UserListModel, RecyclerViewAdapterGroupMember.GroupMemberViewHolder> {
+public class RecyclerViewAdapterGroupMember extends FirebaseRecyclerAdapter<ChatModel, RecyclerViewAdapterGroupMember.GroupMemberViewHolder> {
     private Context context;
 
     /**
@@ -24,14 +24,14 @@ public class RecyclerViewAdapterGroupMember extends FirebaseRecyclerAdapter<User
      *
      * @param options
      */
-    public RecyclerViewAdapterGroupMember(@NonNull FirebaseRecyclerOptions<UserListModel> options, Context context) {
+    public RecyclerViewAdapterGroupMember(@NonNull FirebaseRecyclerOptions<ChatModel> options, Context context) {
         super(options);
         this.context = context;
     }
 
     @SuppressLint("SetTextI18n")
     @Override
-    protected void onBindViewHolder(@NonNull GroupMemberViewHolder holder, int position, @NonNull UserListModel model) {
+    protected void onBindViewHolder(@NonNull GroupMemberViewHolder holder, int position, @NonNull ChatModel model) {
         // update UI
         if (model.getUsername() == null) {
 
@@ -53,7 +53,7 @@ public class RecyclerViewAdapterGroupMember extends FirebaseRecyclerAdapter<User
         return new RecyclerViewAdapterGroupMember.GroupMemberViewHolder(view);
     }
 
-    class GroupMemberViewHolder extends RecyclerView.ViewHolder{
+    public class GroupMemberViewHolder extends RecyclerView.ViewHolder{
         private TextView textViewUsername, textViewUserBanStatus;
 
         public GroupMemberViewHolder(@NonNull View itemView) {
@@ -61,6 +61,8 @@ public class RecyclerViewAdapterGroupMember extends FirebaseRecyclerAdapter<User
 
             textViewUsername = itemView.findViewById(R.id.textView_username_group_member_list);
             textViewUserBanStatus = itemView.findViewById(R.id.textView_ban_group_member_list);
+
+            itemView.setClickable(true);
         }
     }
 }

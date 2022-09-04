@@ -18,7 +18,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -32,7 +31,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
@@ -64,7 +62,7 @@ import java.util.TimerTask;
 public class GeneralChatActivity extends AppCompatActivity {
     private Toolbar toolbar;
     private LinearLayout linearLayoutUser, linearLayoutAdmin;
-    private TextView textViewMessage, textViewGroupInfoMessage, textViewUsernameReply, textViewMessageReply, textViewGroupName, textViewPinMessage;
+    private TextView textViewViolation_GroupMuteMessage, textViewGroupInfoMessage, textViewUsernameReply, textViewMessageReply, textViewGroupName, textViewPinMessage;
     private ImageView imageViewGroupInfoEdit, imageViewFullDisplay, imageViewDeletePinMessage;
     private ImageButton imageButtonCloseReplyChat, imageButtonSendUserData, imageButtonChatImageChooser, imageButtonDeleteChatImage;
     private LinearLayout linearLayoutReplyMessageGeneralChat, linearLayoutPinMessageParentLayout;
@@ -73,7 +71,7 @@ public class GeneralChatActivity extends AppCompatActivity {
     private RecyclerView recyclerViewChatData;
     private RecyclerViewAdapterChat recyclerViewAdapterChat;
     private MenuItem item1;
-    private Query queryUser, queryChatMessages;
+    private Query query, queryChatMessages;
     private FirebaseUser user;
     private FirebaseDatabase database;
     private FloatingActionButton fabScrollDown, fabScrollUp;
@@ -128,7 +126,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         toolbar = findViewById(R.id.toolbar_general_chat);
         linearLayoutUser = findViewById(R.id.linearLayout_user_generalChat);
         linearLayoutAdmin = findViewById(R.id.linearLayout_adminOnly_generalChat);
-        textViewMessage = findViewById(R.id.textView_message_generalChat);
+        textViewViolation_GroupMuteMessage = findViewById(R.id.textView_message_generalChat);
         item1 = toolbar.getMenu().findItem(R.id.muteGroup);
         editTextUserMessage = findViewById(R.id.edittext_inputMessage_generalChat);
         imageButtonSendUserData = findViewById(R.id.imageButton_sendMessage_generalChat);
@@ -157,6 +155,9 @@ public class GeneralChatActivity extends AppCompatActivity {
         groupName = b.getString("groupName");
         usersCount = b.getInt("usersCount");
         groupKey = b.getString("groupKey");
+
+        // checks isGroupMute and update user messaging ui.
+        checkIsGroupAdminIsUserBan(isGroupMute);
 
         // close activity on click
         toolbar.setNavigationOnClickListener(v -> {
@@ -246,11 +247,11 @@ public class GeneralChatActivity extends AppCompatActivity {
 
         // onclick sends sends user message to realtime firebase
         imageButtonSendUserData.setOnClickListener(v -> {
-            if (TextUtils.isEmpty(editTextUserMessage.getText())) {
+            if (editTextUserMessage.getText().toString().trim().equals("")) {
 
             } else {
                 if (user != null) {
-                    String message = editTextUserMessage.getText().toString();
+                    String message = editTextUserMessage.getText().toString().trim();
                     if (isChatImageSelected) {
                         // sends user message with image attached.
                         sendMessageWithImage(GeneralChatActivity.this, uriChatImage, message);
@@ -416,6 +417,13 @@ public class GeneralChatActivity extends AppCompatActivity {
         //store position locally in shared preferences.
         editor.putInt(groupKey, pagePosition);
         editor.apply();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // checks isGroupMute and update user messaging ui.
+        checkIsGroupAdminIsUserBan(isGroupMute);
     }
 
     @Override
@@ -728,32 +736,36 @@ public class GeneralChatActivity extends AppCompatActivity {
 
                 // on long click on item view.
                 holder.itemView.setOnLongClickListener(v -> {
-                    // remove any previous contextual action bar created for highlighted position.
-                    if (highlightedPosition >= 0) {
-                        // close contextual action bar
-                        actionMode.finish();
+                    if (!isUserBan) {
+                        if (!isGroupMute) {
+                            // remove any previous contextual action bar created for highlighted position.
+                            if (highlightedPosition >= 0) {
+                                // close contextual action bar
+                                actionMode.finish();
+                            }
+                            // get chat image if any
+                            if (model.getImage() != null) {
+                                chatImage = model.getImage();
+                            } else {
+                                chatImage = null;
+                            }
+                            // get highlighted message for pinning
+                            highlightedMessage = model.getMessage();
+                            // get message user id
+                            messageUserId = model.getUserId();
+                            // gets position selected by user to highlight
+                            highlightedPosition = holder.getLayoutPosition();
+                            // get selected message push key for deleting message purpose
+                            messageKey = model.getKey();
+                            // get message text for copy
+                            textToCopy = model.getMessage();
+                            // get user message info a user wants to reply to.
+                            generalChatViewModel.setUserReplyInfo(model.getUsername(), model.getMessage(), holder.getLayoutPosition(), model.getUsernameColor(), model.isUserAdmin(), model.getKey());
+                            // display contextual app bar when long click in item view.
+                            actionMode = startSupportActionMode(actionModeCallback);
+                            notifyDataSetChanged();
+                        }
                     }
-                    // get chat image if any
-                    if (model.getImage() != null) {
-                        chatImage = model.getImage();
-                    } else {
-                        chatImage = null;
-                    }
-                    // get highlighted message for pinning
-                    highlightedMessage = model.getMessage();
-                    // get message user id
-                    messageUserId = model.getUserId();
-                    // gets position selected by user to highlight
-                    highlightedPosition = holder.getLayoutPosition();
-                    // get selected message push key for deleting message purpose
-                    messageKey = model.getKey();
-                    // get message text for copy
-                    textToCopy = model.getMessage();
-                    // get user message info a user wants to reply to.
-                    generalChatViewModel.setUserReplyInfo(model.getUsername(), model.getMessage(), holder.getLayoutPosition(), model.getUsernameColor(), model.isUserAdmin(), model.getKey());
-                    // display contextual app bar when long click in item view.
-                    actionMode = startSupportActionMode(actionModeCallback);
-                    notifyDataSetChanged();
                     return false;
                 });
 
@@ -818,6 +830,34 @@ public class GeneralChatActivity extends AppCompatActivity {
                 }else {
                     holder.cardViewReplyInfo.setVisibility(View.GONE);
                 }
+
+                // onclick on username pops up dialog for banning users
+                if (isUserAdmin) {
+                    holder.textViewUsername.setOnClickListener(v -> {
+                        query = FirebaseDatabase.getInstance().getReference("Users").child(model.getUserId());
+                        query.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                if (snapshot.exists()) {
+                                    boolean isUserBanned = (boolean) Objects.requireNonNull(snapshot.child(getStringResource(R.string.userBan)).getValue());
+                                    // check if user is blocked or not before updating ui
+                                    if (isUserBanned) {
+                                        // update UI (un-block user)
+                                        banUser(false, model.getUserId(), "Ban User", "Do you want to unblock user?", "unblock");
+                                    }else {
+                                        // update UI (block user)
+                                        banUser(true, model.getUserId(), "Ban User", "Do you want to ban user?", "block");
+                                    }
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError error) {
+
+                            }
+                        });
+                    });
+                }
             }
 
             @Override
@@ -873,7 +913,7 @@ public class GeneralChatActivity extends AppCompatActivity {
                 if (snapshot.child(getStringResource(R.string.adminOnly)).exists()) {
                     isGroupMute = (boolean) Objects.requireNonNull(snapshot.child(getStringResource(R.string.adminOnly)).getValue());
                     // checks isGroupMute and update user messaging ui.
-                    checkIsGroupAdminOnly(isGroupMute);
+                    checkIsGroupAdminIsUserBan(isGroupMute);
                 }
                 // get group image string url (if any)
                 if (snapshot.child(getStringResource(R.string.groupImage)).exists()) {
@@ -902,10 +942,13 @@ public class GeneralChatActivity extends AppCompatActivity {
                 // get user info on been banned
                 if (snapshot.child(getStringResource(R.string.userBan)).exists()) {
                     isUserBan = (boolean) Objects.requireNonNull(snapshot.child(getStringResource(R.string.userBan)).getValue());
+                    // checks isGroupMute and update user messaging ui. refresh when user ban id is changed
+                    checkIsGroupAdminIsUserBan(isGroupMute);
                 }
                 // get user info on been admin
                 if (snapshot.child(getStringResource(R.string.userAdmin)).exists()) {
                     isUserAdmin = (boolean) Objects.requireNonNull(snapshot.child(getStringResource(R.string.userAdmin)).getValue());
+
                 }
             }
 
@@ -983,8 +1026,8 @@ public class GeneralChatActivity extends AppCompatActivity {
         }
 
         // read data(group info) from firebase
-        queryUser = FirebaseDatabase.getInstance().getReference("Groups");
-        queryUser.addValueEventListener(new ValueEventListener() {
+        query = FirebaseDatabase.getInstance().getReference("Groups");
+        query.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 String groupName = Objects.requireNonNull(snapshot.child(groupKey).child(getStringResource(R.string.groupName)).getValue()).toString();
@@ -1014,7 +1057,7 @@ public class GeneralChatActivity extends AppCompatActivity {
 
     }
 
-    private void checkIsGroupAdminOnly(boolean isGroupMute) {
+    private void checkIsGroupAdminIsUserBan(boolean isGroupMute) {
         // checks if the group isAminOnly or not(for all users to chat)
         if (isGroupMute) {
             // update appbar menu
@@ -1025,7 +1068,7 @@ public class GeneralChatActivity extends AppCompatActivity {
                 if (isUserBan) {
                     linearLayoutUser.setVisibility(View.GONE);
                     // updates user for rule violation
-                    textViewMessage.setText("For Violation of rules you have been ban from sending messages");
+                    textViewViolation_GroupMuteMessage.setText("For Violation of rules you have been ban from sending messages");
                     linearLayoutAdmin.setVisibility(View.VISIBLE);
                 } else {
                     linearLayoutUser.setVisibility(View.VISIBLE);
@@ -1033,6 +1076,7 @@ public class GeneralChatActivity extends AppCompatActivity {
                 }
             } else {
                 linearLayoutUser.setVisibility(View.GONE);
+                textViewViolation_GroupMuteMessage.setText("Only admins are able to post here.");
                 linearLayoutAdmin.setVisibility(View.VISIBLE);
             }
 
@@ -1043,7 +1087,7 @@ public class GeneralChatActivity extends AppCompatActivity {
             if (isUserBan) {
                 linearLayoutUser.setVisibility(View.GONE);
                 // updates user for rule violation
-                textViewMessage.setText("For Violation of rules you have been ban from sending messages");
+                textViewViolation_GroupMuteMessage.setText("For Violation of rules you have been ban from sending messages");
                 linearLayoutAdmin.setVisibility(View.VISIBLE);
             } else {
                 linearLayoutUser.setVisibility(View.VISIBLE);
@@ -1121,5 +1165,21 @@ public class GeneralChatActivity extends AppCompatActivity {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMM d-hh:mmaaa");
         String date = simpleDateFormat.format(calendar.getTime());
         return date;
+    }
+
+    private void banUser(boolean blockUser, String userID, String title, String message, String positiveButton){
+        AlertDialog.Builder builder = new AlertDialog.Builder(GeneralChatActivity.this);
+        builder.setTitle(title)
+                .setMessage(message)
+                .setPositiveButton(positiveButton, (dialog, which) -> {
+                    // update user profile ban status
+                    DatabaseReference myRef = FirebaseDatabase.getInstance().getReference("Users");
+                    myRef.child(userID).child(getStringResource(R.string.userBan)).setValue(blockUser);
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> {
+                    dialog.dismiss();
+                });
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 }

@@ -15,6 +15,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
@@ -25,21 +26,22 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.university.chat.R;
-import com.university.chat.data.model.UserListModel;
+import com.university.chat.data.model.ChatModel;
 import com.university.chat.ui.adapter.RecyclerViewAdapterGroupMember;
 import com.university.theme.ItemClickSupport;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class GroupMemberActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private RecyclerViewAdapterGroupMember recyclerViewAdapterGroupMember;
-    private Query queryUser, queryBan;
+    private Query queryUser, query;
     private FirebaseDatabase firebaseDatabase;
     private DatabaseReference databaseReferenceBan, databaseReferenceUserProfile;
-    private ArrayList<String> usersArrayList;
     private Toolbar toolbar;
     private android.widget.SearchView simpleSearchView;
+    private Button buttonAllUsers, buttonBanUsers;
 
 
     @Override
@@ -53,55 +55,10 @@ public class GroupMemberActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recyclerView_group_members);
         toolbar = findViewById(R.id.toolbar_members);
         simpleSearchView = findViewById(R.id.simpleSearchView);
+        buttonAllUsers = findViewById(R.id.button_AllUsers_group_members);
+        buttonBanUsers = findViewById(R.id.button_BanUsers_group_members);
         // close activity on click
         toolbar.setNavigationOnClickListener(v -> finish());
-
-        simpleSearchView.setOnQueryTextListener(new android.widget.SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                if (query.equals("")) {
-                    queryUser = FirebaseDatabase.getInstance().getReference("Users");
-                }else {
-                    queryUser = FirebaseDatabase.getInstance().getReference("Users").orderByChild(getStringResource(R.string.username)).equalTo(query);
-                }
-                // It is a class provide by the FirebaseUI to make a
-                // query in the database to fetch appropriate data
-                FirebaseRecyclerOptions<UserListModel> options = new FirebaseRecyclerOptions.Builder<UserListModel>()
-                        .setQuery(queryUser, UserListModel.class)
-                        .build();
-                // Connecting object of required Adapter class to
-                // the Adapter class itself
-                recyclerViewAdapterGroupMember = new RecyclerViewAdapterGroupMember(options, GroupMemberActivity.this);
-                // Connecting Adapter class with the Recycler view
-                // Function to tell the app to start getting data from database
-                recyclerView.setAdapter(recyclerViewAdapterGroupMember);
-                recyclerViewAdapterGroupMember.startListening();
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                if (newText.equals("")) {
-                    queryUser = FirebaseDatabase.getInstance().getReference("Users");
-                }else {
-                    queryUser = FirebaseDatabase.getInstance().getReference("Users").orderByChild(getStringResource(R.string.username)).equalTo(newText);
-                }
-                // It is a class provide by the FirebaseUI to make a
-                // query in the database to fetch appropriate data
-                FirebaseRecyclerOptions<UserListModel> options = new FirebaseRecyclerOptions.Builder<UserListModel>()
-                        .setQuery(queryUser, UserListModel.class)
-                        .build();
-                // Connecting object of required Adapter class to
-                // the Adapter class itself
-                recyclerViewAdapterGroupMember = new RecyclerViewAdapterGroupMember(options, GroupMemberActivity.this);
-                // Connecting Adapter class with the Recycler view
-                // Function to tell the app to start getting data from database
-                recyclerView.setAdapter(recyclerViewAdapterGroupMember);
-                recyclerViewAdapterGroupMember.startListening();
-                return false;
-            }
-        });
-
         //retrieve an instance of your database
         firebaseDatabase = FirebaseDatabase.getInstance();
         // location reference in database for banned users
@@ -116,110 +73,106 @@ public class GroupMemberActivity extends AppCompatActivity {
 
         // default divider line for recycler view.
         recyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
-        // firebase location path
-        queryBan = FirebaseDatabase.getInstance().getReference("BanUser");
-        queryUser = FirebaseDatabase.getInstance().getReference("Users");
-        // It is a class provide by the FirebaseUI to make a
-        // query in the database to fetch appropriate data
-        FirebaseRecyclerOptions<UserListModel> options = new FirebaseRecyclerOptions.Builder<UserListModel>()
-                .setQuery(queryUser, UserListModel.class)
-                .build();
-        // Connecting object of required Adapter class to
-        // the Adapter class itself
-        recyclerViewAdapterGroupMember = new RecyclerViewAdapterGroupMember(options, GroupMemberActivity.this);
-        // Connecting Adapter class with the Recycler view
-        // Function to tell the app to start getting data from database
-        recyclerView.setAdapter(recyclerViewAdapterGroupMember);
 
-        recyclerViewAdapterGroupMember.startListening();
-        // instance of ArrayList
-        usersArrayList = new ArrayList<>();
-        // listener for changes in the data location
-        queryUser.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-
-                for (DataSnapshot dataSnapshot1: snapshot.getChildren()){
-                    // stores data in location to array list.
-                    usersArrayList.add(dataSnapshot1.getKey());
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
-        // on long click in recycler view
-        ItemClickSupport.addTo(recyclerView).setOnItemLongClickListener((recyclerView, position, v) -> {
-            // variable storing user userId.
-            String userId = usersArrayList.get(position);
-            // listener for changes in the data location
-            queryBan.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    if (snapshot.child(userId).exists()){
-                        // update UI (un-block user)
-                        showAlertDialog(false, userId, "Ban User", "Do you want to unblock user?", "unblock");
-                    }else {
-                        // update UI (block user)
-                        showAlertDialog(true, userId, "Ban User", "Do you want to ban user?", "block");
-                    }
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-
-                }
-            });
-            return true;
-        });
-
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate menu with items using MenuInflator
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.group_members_app_bar, menu);
-
-        // Initialise menu item search bar
-        // with id and take its object
-        MenuItem searchViewItem = menu.findItem(R.id.searchView);
-        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchViewItem);
-
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        simpleSearchView.setOnQueryTextListener(new android.widget.SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                Toast.makeText(GroupMemberActivity.this, "hello", Toast.LENGTH_SHORT).show();
-
+                if (query.trim().equals("")) {
+                    queryUser = FirebaseDatabase.getInstance().getReference("Users");
+                }else {
+                    queryUser = FirebaseDatabase.getInstance().getReference("Users").orderByChild(getStringResource(R.string.username)).equalTo(query.trim());
+                }
+                membersRecyclerView();
                 return false;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-
+                if (newText.trim().equals("")) {
+                    queryUser = FirebaseDatabase.getInstance().getReference("Users");
+                }else {
+                    queryUser = FirebaseDatabase.getInstance().getReference("Users").orderByChild(getStringResource(R.string.username)).equalTo(newText.trim());
+                }
+                membersRecyclerView();
                 return false;
             }
         });
+        // on click filter query for all users
+        buttonAllUsers.setOnClickListener(v -> {
+            // firebase location path
+            queryUser = FirebaseDatabase.getInstance().getReference("Users");
+            membersRecyclerView();
+        });
+        // on click filter query for ban users
+        buttonBanUsers.setOnClickListener(v -> {
+            // firebase location path
+            queryUser = FirebaseDatabase.getInstance().getReference("Users").orderByChild(getStringResource(R.string.userBan)).equalTo(true);
+            membersRecyclerView();
+        });
 
-        return super.onCreateOptionsMenu(menu);
+        // firebase location path
+        queryUser = FirebaseDatabase.getInstance().getReference("Users");
+        membersRecyclerView();
+
+
+
     }
 
-    private void showAlertDialog(boolean blockUser, String userID, String title, String message, String positiveButton){
+   private void membersRecyclerView(){
+       // It is a class provide by the FirebaseUI to make a
+       // query in the database to fetch appropriate data
+       FirebaseRecyclerOptions<ChatModel> options = new FirebaseRecyclerOptions.Builder<ChatModel>()
+               .setQuery(queryUser, ChatModel.class)
+               .build();
+       // Connecting object of required Adapter class to
+       // the Adapter class itself
+       recyclerViewAdapterGroupMember = new RecyclerViewAdapterGroupMember(options, GroupMemberActivity.this){
+           @Override
+           protected void onBindViewHolder(@NonNull RecyclerViewAdapterGroupMember.GroupMemberViewHolder holder, int position, @NonNull ChatModel model) {
+               super.onBindViewHolder(holder, position, model);
+               // ban or unban user
+               holder.itemView.setOnLongClickListener(v -> {
+                   query = FirebaseDatabase.getInstance().getReference("Users").child(model.getUserId());
+                   query.addListenerForSingleValueEvent(new ValueEventListener() {
+                       @Override
+                       public void onDataChange(@NonNull DataSnapshot snapshot) {
+                           if (snapshot.exists()) {
+                               boolean isUserBanned = (boolean) Objects.requireNonNull(snapshot.child(getStringResource(R.string.userBan)).getValue());
+                               // check if user is blocked or not before updating ui
+                               if (isUserBanned) {
+                                   // update UI (un-block user)
+                                   banUser(false, model.getUserId(), "Ban User", "Do you want to unblock user?", "unblock");
+                               }else {
+                                   // update UI (block user)
+                                   banUser(true, model.getUserId(), "Ban User", "Do you want to ban user?", "block");
+                               }
+                           }
+                       }
+
+                       @Override
+                       public void onCancelled(@NonNull DatabaseError error) {
+
+                       }
+                   });
+
+                   return false;
+               });
+           }
+       };
+       // Connecting Adapter class with the Recycler view
+       // Function to tell the app to start getting data from database
+       recyclerView.setAdapter(recyclerViewAdapterGroupMember);
+       recyclerViewAdapterGroupMember.startListening();
+   }
+
+    private void banUser(boolean blockUser, String userID, String title, String message, String positiveButton){
         AlertDialog.Builder builder = new AlertDialog.Builder(GroupMemberActivity.this);
         builder.setTitle(title)
                 .setMessage(message)
                 .setPositiveButton(positiveButton, (dialog, which) -> {
-                    if (blockUser){
-                        // add user to ban path for violation
-                        databaseReferenceBan.child(userID).setValue(userID);
-                    }else {
-                        // remove user from ban path for violation
-                        databaseReferenceBan.child(userID).removeValue();
-                    }
                     // update user profile ban status
-                    databaseReferenceUserProfile.child(userID).child(getStringResource(R.string.userBan)).setValue(blockUser);
+                    DatabaseReference myRef = FirebaseDatabase.getInstance().getReference("Users");
+                    myRef.child(userID).child(getStringResource(R.string.userBan)).setValue(blockUser);
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> {
                     dialog.dismiss();

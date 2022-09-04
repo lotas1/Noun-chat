@@ -2,8 +2,8 @@ package com.university.chat.data.model;
 
 public class ChatModel {
     private String username, message, time, userId, image, replyMessage, replyUsername, key, replyMessageKey;
-    private int replyPosition, usernameColor, replyUsernameColor;
-    private boolean userAdmin, replyUserAdmin;
+    private int usernameColor, replyUsernameColor;
+    private boolean userAdmin, replyUserAdmin, userBan;
 
     public String getUsername() {
         return username;
@@ -107,5 +107,13 @@ public class ChatModel {
 
     public void setReplyMessageKey(String replyMessageKey) {
         this.replyMessageKey = replyMessageKey;
+    }
+
+    public boolean isUserBan() {
+        return userBan;
+    }
+
+    public void setUserBan(boolean userBan) {
+        this.userBan = userBan;
     }
 }

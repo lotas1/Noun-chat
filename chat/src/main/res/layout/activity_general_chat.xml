@@ -237,7 +237,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="Only admins are able to post here."
+                    android:text=""
                     android:textColor="@color/black"
                     android:textSize="16dp" />
             </LinearLayout>

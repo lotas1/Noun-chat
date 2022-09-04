@@ -86,14 +86,14 @@ public class FaqOnlineActivity extends AppCompatActivity {
 
         // send info to faq
         imageButtonSendFAQ.setOnClickListener(v -> {
-            if (TextUtils.isEmpty(editTextTitle.getText())){
+            if (editTextTitle.getText().toString().trim().equals("")){
                 Toast.makeText(FaqOnlineActivity.this, "Enter Faq Title", Toast.LENGTH_SHORT).show();
             }else {
-                if (TextUtils.isEmpty(editTextBody.getText())){
+                if (editTextBody.getText().toString().trim().equals("")){
                     Toast.makeText(FaqOnlineActivity.this, "Enter Faq Body", Toast.LENGTH_SHORT).show();
                 }else{
-                    String title = editTextTitle.getText().toString();
-                    String body = editTextBody.getText().toString();
+                    String title = editTextTitle.getText().toString().trim();
+                    String body = editTextBody.getText().toString().trim();
                     // send faq info to database
                     sendFaqInfo(title, body);
                 }
