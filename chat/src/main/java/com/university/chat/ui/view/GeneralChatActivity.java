@@ -157,6 +157,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         groupName = b.getString("groupName");
         usersCount = b.getInt("usersCount");
         groupKey = b.getString("groupKey");
+        isGroupMute = b.getBoolean("adminOnly");
 
         // checks isGroupMute and update user messaging ui.
         checkIsGroupAdminIsUserBan(isGroupMute);
@@ -208,6 +209,18 @@ public class GeneralChatActivity extends AppCompatActivity {
             }
             return false;
         });
+
+        // notify user about the group info and rules for the first time
+        // show dialog to only public group
+        if (!isGroupMute) {
+            //
+            boolean firstTime = sharedPref.getBoolean("firstTime", true);
+            if (firstTime) {
+                editor.putBoolean("firstTime", false).apply();
+                // show violation rules dialog
+                showAlertDialog(GeneralChatActivity.this, "Group Rules", "READ CAREFULLY\n\nYou will be ban from sending messages on any group if you violate any of this rules\n1) Using bad words\n2) Posting of unrelated information.\n3) Sending spam messages");
+            }
+        }
 
         // on click on pin message recycler view scrolls to the pin message position
         linearLayoutPinMessageParentLayout.setOnClickListener(v -> {
