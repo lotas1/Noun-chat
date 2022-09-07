@@ -13,6 +13,7 @@
         android:id="@+id/cardView2"
         android:layout_width="50dp"
         android:layout_height="50dp"
+        android:layout_margin="2dp"
         app:cardBackgroundColor="@color/white"
         app:cardCornerRadius="100dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -70,6 +71,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <TextView
@@ -80,9 +82,20 @@
                 android:paddingEnd="5dp"
                 android:singleLine="true"
                 android:text="Noun General Group"
-                android:textSize="14dp"
-                app:layout_constraintStart_toEndOf="@+id/cardView2"
-                app:layout_constraintTop_toTopOf="parent" />
+                android:textSize="14dp" />
+
+            <TextView
+                android:id="@+id/textView_badge"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:textSize="8dp"
+                android:gravity="center"
+                android:paddingHorizontal="5dp"
+                android:inputType="number"
+                android:maxLines="1"
+                android:textStyle="bold"
+                android:textColor="@color/white"
+                android:background="@drawable/textview_badge"/>
 
 
         </LinearLayout>

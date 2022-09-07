@@ -42,5 +42,7 @@
     <string name="position">position</string>
     <string name="firstTime">firstTime</string>
 
+    <string name="preference_file_key">NounChat</string>
+
 
 </resources>

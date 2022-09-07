@@ -666,6 +666,7 @@ public class GeneralChatActivity extends AppCompatActivity {
                     // update last message sender.
                     groupRef.child(groupKey).child(getStringResource(R.string.sender)).setValue(username);
                     groupRef.child(groupKey).child(getStringResource(R.string.lastMessage)).setValue(messageChat);
+                    groupRef.child(groupKey).child(getStringResource(R.string.time)).setValue(getDateGroup());
                     // clear view.
                     editTextUserMessage.setText(null);
                     // remove chat image and set isChatImageChooser & isChatImageSelected to false
@@ -718,6 +719,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         // update last message sender for ui update of group list.
         groupRef.child(groupKey).child(getStringResource(R.string.sender)).setValue(username);
         groupRef.child(groupKey).child(getStringResource(R.string.lastMessage)).setValue(message);
+        groupRef.child(groupKey).child(getStringResource(R.string.time)).setValue(getDateGroup());
         // clear view.
         editTextUserMessage.setText(null);
         linearLayoutReplyMessageGeneralChat.setVisibility(View.GONE);
@@ -1256,6 +1258,13 @@ public class GeneralChatActivity extends AppCompatActivity {
     public String getDate() {
         Calendar calendar = Calendar.getInstance();
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMM d-hh:mmaaa");
+        String date = simpleDateFormat.format(calendar.getTime());
+        return date;
+    }
+    // return date in string.
+    public String getDateGroup(){
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("d/MM/yy");
         String date = simpleDateFormat.format(calendar.getTime());
         return date;
     }

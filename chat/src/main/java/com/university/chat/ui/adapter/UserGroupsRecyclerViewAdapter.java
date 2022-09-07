@@ -39,7 +39,7 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
     private Context context;
     private FirebaseUser user;
     private Query queryBan, queryUserProfile, queryUserCount;
-    private boolean isUserBan, isUserAdmin;
+    private boolean isUserBan, isUserAdmin = false;
     private ArrayList<String> usersArray;
 
     /**
@@ -130,7 +130,7 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
     }
 
    public class UserGroupsViewHolder extends RecyclerView.ViewHolder{
-        TextView textViewGroupName, textViewLastMessageTime, textViewLastMessage;
+        TextView textViewGroupName, textViewLastMessageTime, textViewLastMessage, textViewBadge;
         ImageView imageViewGroupProfilePics;
 
         public UserGroupsViewHolder(@NonNull View itemView) {
@@ -140,6 +140,7 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
             textViewLastMessage = itemView.findViewById(R.id.textView_group_last_message);
             textViewLastMessageTime = itemView.findViewById(R.id.textView_group_last_message_time);
             imageViewGroupProfilePics = itemView.findViewById(R.id.imageView_group_profile_pics);
+            textViewBadge = itemView.findViewById(R.id.textView_badge);
         }
     }
 
@@ -194,7 +195,7 @@ public class UserGroupsRecyclerViewAdapter extends FirebaseRecyclerAdapter<UserG
                 if (snapshot.exists()){
                     // loop through users data and store in array list
                     for (DataSnapshot datasnapshot: snapshot.getChildren()) {
-                        usersArray.add(datasnapshot.toString());
+                        usersArray.add(Objects.requireNonNull(datasnapshot.child(getStringResource(R.string.userId)).getValue()).toString());
                     }
                 }
             }
