@@ -38,5 +38,9 @@
     <string name="replyUsernameColor">replyUsernameColor</string>
     <string name="replyUserAdmin">replyUserAdmin</string>
 
+    <string name="chatCount">chatCount</string>
+    <string name="position">position</string>
+    <string name="firstTime">firstTime</string>
+
 
 </resources>

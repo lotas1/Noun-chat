@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -24,6 +25,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -33,6 +35,8 @@ import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.badge.BadgeDrawable;
+import com.google.android.material.badge.BadgeUtils;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -97,9 +101,9 @@ public class GeneralChatActivity extends AppCompatActivity {
     private SharedPreferences.Editor editor;
 
     private boolean clickedPinnedOrReplyMessage = false;
-    private ArrayList<String> chatPushKeyArray;
-    private int limitToLast = 7000;
-
+    private ArrayList<String> chatPushKeyArray, arrayChatSize;
+    private final int limitToLast = 7000;
+    private  BadgeDrawable badgeDrawable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -159,6 +163,8 @@ public class GeneralChatActivity extends AppCompatActivity {
         groupKey = b.getString("groupKey");
         isGroupMute = b.getBoolean("adminOnly");
 
+
+
         // checks isGroupMute and update user messaging ui.
         checkIsGroupAdminIsUserBan(isGroupMute);
 
@@ -214,9 +220,9 @@ public class GeneralChatActivity extends AppCompatActivity {
         // show dialog to only public group
         if (!isGroupMute) {
             //
-            boolean firstTime = sharedPref.getBoolean("firstTime", true);
+            boolean firstTime = sharedPref.getBoolean(groupKey.concat(getString(R.string.firstTime)), true);
             if (firstTime) {
-                editor.putBoolean("firstTime", false).apply();
+                editor.putBoolean(groupKey.concat(getString(R.string.firstTime)), false).apply();
                 // show violation rules dialog
                 showAlertDialog(GeneralChatActivity.this, "Group Rules", "READ CAREFULLY\n\nYou will be ban from sending messages on any group if you violate any of this rules\n1) Using bad words\n2) Posting of unrelated information.\n3) Sending spam messages");
             }
@@ -258,6 +264,7 @@ public class GeneralChatActivity extends AppCompatActivity {
             imageChooser();
 
         });
+
         // on click delete image selected for sending in chat messages.
         imageButtonDeleteChatImage.setOnClickListener(v -> {
             // remove chat image and set isChatImageChooser & isChatImageSelected to false
@@ -302,8 +309,45 @@ public class GeneralChatActivity extends AppCompatActivity {
             }
         });
 
+        fabScrollDown.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @SuppressLint("UnsafeOptInUsageError")
+            @Override
+            public void onGlobalLayout() {
+                // instantiate badge drawable
+                badgeDrawable = BadgeDrawable.create(GeneralChatActivity.this);
+                // get badge number from viewModel
+                generalChatViewModel.getFabBadgeNumber().observe(GeneralChatActivity.this, new Observer<Integer>() {
+                    @Override
+                    public void onChanged(Integer badgeNumber) {
+                        if (badgeNumber <= 0) {
+                            badgeDrawable.clearNumber();
+                            badgeDrawable.setVisible(false);
+                        }else {
+                            badgeDrawable.setVisible(true);
+                            badgeDrawable.setNumber(badgeNumber);
+                        }
+                    }
+                });
+
+                //Important to change the position of the Badge
+                badgeDrawable.setHorizontalOffset(30);
+                badgeDrawable.setVerticalOffset(20);
+
+                BadgeUtils.attachBadgeDrawable(badgeDrawable, fabScrollDown, null);
+
+                fabScrollDown.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+            }
+        });
         // scroll down to last position of recycler view
-        fabScrollDown.setOnClickListener(v -> recyclerViewChatData.smoothScrollToPosition(Objects.requireNonNull(recyclerViewChatData.getAdapter()).getItemCount()-1));
+        fabScrollDown.setOnClickListener(v -> {
+            recyclerViewChatData.smoothScrollToPosition(Objects.requireNonNull(recyclerViewChatData.getAdapter()).getItemCount()-1);
+            // set badge number to 0 which will clear the badge number and set visibility to gone
+            generalChatViewModel.setFabBadgeLiveData(0);
+            // store user total chat messages count
+            // this is for getting user unread number of messages and notify user.
+            editor.putInt(groupKey.concat(getStringResource(R.string.chatCount)), arrayChatSize.size()).apply();
+        });
+
         // scroll up to the first position in the recycler view
         fabScrollUp.setOnClickListener(v -> recyclerViewChatData.scrollToPosition(0));
 
@@ -411,6 +455,8 @@ public class GeneralChatActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        // if user not in the last position check for new chat message size and update ui
+        newChatSize();
         if (isUserAdmin) {
             fabScrollUp.setVisibility(View.VISIBLE);
             //linearLayoutAdmin.setVisibility(View.VISIBLE);
@@ -433,9 +479,9 @@ public class GeneralChatActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         // get current position of recycler view
-        int pagePosition = ((LinearLayoutManager) Objects.requireNonNull(recyclerViewChatData.getLayoutManager())).findLastVisibleItemPosition();
+        int pagePosition = ((LinearLayoutManager) Objects.requireNonNull(recyclerViewChatData.getLayoutManager())).findLastCompletelyVisibleItemPosition();
         //store position locally in shared preferences.
-        editor.putInt(groupKey, pagePosition);
+        editor.putInt(groupKey.concat(getString(R.string.position)), pagePosition);
         editor.apply();
     }
 
@@ -509,12 +555,13 @@ public class GeneralChatActivity extends AppCompatActivity {
         });
         // get all chat push key and store in an array.
         // for been able to get the pin message position
+        // check if user or admin to consider query
         if (isUserAdmin) {
             queryChatMessages = FirebaseDatabase.getInstance().getReference(groupKey);
         }else{
             queryChatMessages = FirebaseDatabase.getInstance().getReference(groupKey).limitToLast(limitToLast);
         }
-        // get all messages and store in array
+        // get all messages key and store in array
         queryChatMessages.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -609,6 +656,11 @@ public class GeneralChatActivity extends AppCompatActivity {
                         // Function to tell the app to start getting data from database
                         // refreshes adapter for new messages.
                         recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
+                        // clear badge and stop from displaying
+                        // set badge number to 0 which will clear the badge number and set visibility to gone
+                        generalChatViewModel.setFabBadgeLiveData(0);
+                        // save chat size for the purpose of calculating new messages size to display in scroll down fab.
+                        saveChatSize();
                     });
                     map.clear();
                     // update last message sender.
@@ -672,7 +724,11 @@ public class GeneralChatActivity extends AppCompatActivity {
         isReplyChatSelected = false;
         replyUsername = null;
         replyMessage = null;
-
+        // clear badge and stop from displaying
+        // set badge number to 0 which will clear the badge number and set visibility to gone
+        generalChatViewModel.setFabBadgeLiveData(0);
+        // save chat size for the purpose of calculating new messages size to display in scroll down fab.
+        saveChatSize();
     }
 
     private void chatRecyclerView(Context context) {
@@ -701,12 +757,22 @@ public class GeneralChatActivity extends AppCompatActivity {
         queryChatMessages.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                int pagePosition = ((LinearLayoutManager) Objects.requireNonNull(recyclerViewChatData.getLayoutManager())).findLastCompletelyVisibleItemPosition();
-                if (Objects.requireNonNull(recyclerViewChatData.getAdapter()).getItemCount() - 1 == pagePosition) {
+                // if user position is on the last message refresh recycler view as messages come in.
+                int UserPagePosition = ((LinearLayoutManager) Objects.requireNonNull(recyclerViewChatData.getLayoutManager())).findLastCompletelyVisibleItemPosition();
+                int currentChatItemSize = Objects.requireNonNull(recyclerViewChatData.getAdapter()).getItemCount() - 1;
+                if (currentChatItemSize == UserPagePosition) {
                     // Connecting Adapter class with the Recycler view
                     // Function to tell the app to start getting data from database
                     // refreshes adapter for new messages.
                     recyclerViewChatData.setAdapter(recyclerViewAdapterChat);
+                    // clear badge and stop from displaying
+                    // set badge number to 0 which will clear the badge number and set visibility to gone
+                    generalChatViewModel.setFabBadgeLiveData(0);
+                    // save chat size for the purpose of calculating new messages size to display in scroll down fab.
+                    saveChatSize();
+                }else {
+                    // if user not in the last position check for new chat message size and update ui
+                    newChatSize();
                 }
             }
 
@@ -717,7 +783,8 @@ public class GeneralChatActivity extends AppCompatActivity {
 
             @Override
             public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-
+                // save chat size for the purpose of calculating new messages size to display in scroll down fab.
+                saveChatSize();
             }
 
             @Override
@@ -883,13 +950,13 @@ public class GeneralChatActivity extends AppCompatActivity {
             @Override
             public void onDataChanged() {
                 super.onDataChanged();
-                // read recycler page position from shared preferences.
-                int recyclerPagePosition = sharedPref.getInt(groupKey, 0);
+                // read recycler page position of user from shared preferences.
+                int recyclerPagePosition = sharedPref.getInt(groupKey.concat(getString(R.string.position)), 0);
                 if (recyclerPagePosition != 0) {
-                    // scroll to last position of the user previous position.
+                    // scroll to position of the user previous last position.
                     recyclerViewChatData.scrollToPosition(recyclerPagePosition);
                     //store position locally in shared preferences.
-                    editor.putInt(groupKey, 0);
+                    editor.putInt(groupKey.concat(getString(R.string.position)), 0);
                     editor.apply();
                 }
             }
@@ -909,6 +976,7 @@ public class GeneralChatActivity extends AppCompatActivity {
         messagePositionToScrollTo = chatPushKeyArray.indexOf(messageToScrollTo);
         // check if pin message still exist before updating user
         if (messagePositionToScrollTo < 0){
+            // notify user message key doesn't exist.
             Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show();
         }else {
             recyclerViewChatData.scrollToPosition(messagePositionToScrollTo);
@@ -1207,4 +1275,61 @@ public class GeneralChatActivity extends AppCompatActivity {
         AlertDialog dialog = builder.create();
         dialog.show();
     }
+
+    private void newChatSize(){
+        // check if user or admin to consider query to use.
+        if (isUserAdmin) {
+            queryChatMessages = FirebaseDatabase.getInstance().getReference(groupKey);
+        }else{
+            queryChatMessages = FirebaseDatabase.getInstance().getReference(groupKey).limitToLast(limitToLast);
+        }
+        // get all messages key and store in array
+        queryChatMessages.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                arrayChatSize = new ArrayList<>();
+                for (DataSnapshot dataSnapshot: snapshot.getChildren()){
+                    arrayChatSize.add(Objects.requireNonNull(dataSnapshot.child(getStringResource(R.string.key)).getValue()).toString());
+                }
+                // compare old chat count with new chat count.
+                // then notify user about new messages via scroll down button
+                int oldChatCount = sharedPref.getInt(groupKey.concat(getString(R.string.chatCount)), 0);
+                int unReadMessagesCount = arrayChatSize.size() - oldChatCount;
+                generalChatViewModel.setFabBadgeLiveData(unReadMessagesCount);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
+    private void saveChatSize(){
+        // check if user or admin to consider query to use.
+        if (isUserAdmin) {
+            queryChatMessages = FirebaseDatabase.getInstance().getReference(groupKey);
+        }else{
+            queryChatMessages = FirebaseDatabase.getInstance().getReference(groupKey).limitToLast(limitToLast);
+        }
+        // get all messages key and store in array
+        queryChatMessages.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                arrayChatSize = new ArrayList<>();
+                for (DataSnapshot dataSnapshot: snapshot.getChildren()){
+                    arrayChatSize.add(Objects.requireNonNull(dataSnapshot.child(getStringResource(R.string.key)).getValue()).toString());
+                }
+                // store user total chat messages count
+                // this is for getting user unread number of messages and notify user.
+                editor.putInt(groupKey.concat(getStringResource(R.string.chatCount)), arrayChatSize.size()).apply();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+    }
+
 }

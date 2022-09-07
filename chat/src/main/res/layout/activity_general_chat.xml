@@ -61,6 +61,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentBottom="true"
+                android:layout_marginEnd="10dp"
                 android:gravity="center"
                 app:fabSize="mini"
                 app:srcCompat="@drawable/ic_baseline_keyboard_arrow_down_24" />
@@ -69,9 +70,10 @@
                 android:id="@+id/fab_scrollUp_generalChat"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
                 android:layout_above="@+id/fab_scrollDown_generalChat"
+                android:layout_alignParentEnd="true"
                 android:gravity="center"
+                android:layout_marginEnd="10dp"
                 app:fabSize="mini"
                 app:srcCompat="@drawable/ic_baseline_keyboard_arrow_up_24" />
 
